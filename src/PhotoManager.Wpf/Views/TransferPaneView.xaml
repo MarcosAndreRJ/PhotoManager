@@ -1,0 +1,289 @@
+<UserControl x:Class="PhotoManager.Wpf.Views.TransferPaneView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:PhotoManager.Wpf.Views"
+             xmlns:controls="clr-namespace:PhotoManager.Wpf.Controls"
+             Focusable="True" KeyDown="Pane_KeyDown" PreviewGotKeyboardFocus="Pane_PreviewGotKeyboardFocus" PreviewMouseDown="Pane_PreviewMouseDown">
+    <UserControl.Resources>
+        <!-- Itens do submenu/botão "Cor": amostra + nome + atalho, iguais aos da Biblioteca -->
+        <Style x:Key="ColorChoiceItem" TargetType="MenuItem">
+            <Setter Property="Command" Value="{Binding Command}" />
+            <Setter Property="InputGestureText" Value="{Binding Shortcut}" />
+        </Style>
+        <DataTemplate x:Key="ColorChoiceTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="12" Height="12" Fill="{Binding Brush}" Stroke="#99888888" StrokeThickness="1" Margin="0,0,8,0" />
+                <TextBlock Text="{Binding Name}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Selo de comparação (Só aqui / Diferente / Igual) -->
+        <Style x:Key="CompareBadge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="5,1" />
+            <Setter Property="Background" Value="#2563EB" />
+            <Setter Property="Visibility" Value="{Binding HasCompareBadge, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <Setter Property="ToolTip" Value="{Binding CompareToolTip}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding CompareState}" Value="Different"><Setter Property="Background" Value="#EA580C" /></DataTrigger>
+                <DataTrigger Binding="{Binding CompareState}" Value="Same"><Setter Property="Background" Value="#16A34A" /></DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Menu de contexto da área de arquivos (o DataContext é o painel). x:Shared=False: uma instância por lista. -->
+        <ContextMenu x:Key="PaneMenu" x:Shared="False">
+            <MenuItem Header="Abrir" InputGestureText="Enter" Click="OpenMenu_Click" FontWeight="SemiBold">
+                <MenuItem.Icon><TextBlock Text="&#xE8E5;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Copiar" Command="{Binding CopyCommand}" InputGestureText="Ctrl+C">
+                <MenuItem.Icon><TextBlock Text="&#xE8C8;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Recortar" Command="{Binding CutCommand}" InputGestureText="Ctrl+X">
+                <MenuItem.Icon><TextBlock Text="&#xE8C6;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Colar" Command="{Binding PasteCommand}" InputGestureText="Ctrl+V">
+                <MenuItem.Icon><TextBlock Text="&#xE77F;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Nova pasta" Command="{Binding NewFolderCommand}" InputGestureText="Ctrl+Shift+N">
+                <MenuItem.Icon><TextBlock Text="&#xE8F4;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Renomear" Command="{Binding RenameCommand}" InputGestureText="F2" ToolTip="Um item: edita o nome no lugar. Vários arquivos: renomear em lote com modelo.">
+                <MenuItem.Icon><TextBlock Text="&#xE8AC;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Cor" ItemsSource="{Binding ColorChoices}" IsEnabled="{Binding CanColor}" ItemContainerStyle="{StaticResource ColorChoiceItem}" ItemTemplate="{StaticResource ColorChoiceTemplate}"
+                      ToolTip="Fotos/vídeos: a etiqueta da Biblioteca. Pastas: cor de pasta. Atalho: 1 a 6; 0 remove.">
+                <MenuItem.Icon><TextBlock Text="&#xE790;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Organizar por data…" Command="{Binding OrganizeByDateCommand}" ToolTip="Cria pastas Ano\Mês (ou outro modelo) e coloca cada foto/vídeo na sua">
+                <MenuItem.Icon><TextBlock Text="&#xE787;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Adicionar ao catálogo" Command="{Binding AddToCatalogCommand}" ToolTip="Cataloga as fotos/vídeos selecionados no lugar onde estão (nada é copiado)">
+                <MenuItem.Icon><TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Exibir no Explorer" Command="{Binding ShowInExplorerCommand}">
+                <MenuItem.Icon><TextBlock Text="&#xE8DA;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Desfazer" Command="{Binding UndoCommand}" InputGestureText="Ctrl+Z">
+                <MenuItem.Icon><TextBlock Text="&#xE7A7;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Excluir (Lixeira)…" Command="{Binding DeleteCommand}" InputGestureText="Del">
+                <MenuItem.Icon><TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="12" Foreground="{DynamicResource FavoriteBrush}" /></MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+
+        <ContextMenu x:Key="ColorMenu" ItemsSource="{Binding ColorChoices}" ItemContainerStyle="{StaticResource ColorChoiceItem}" ItemTemplate="{StaticResource ColorChoiceTemplate}" />
+
+        <!-- Lista: a linha ganha o mesmo tom da etiqueta de cor usado nas miniaturas -->
+        <Style x:Key="ColoredRow" TargetType="ListViewItem">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ColorLabel}" Value="Red"><Setter Property="Background" Value="{DynamicResource PhotoLabelRedBackground}" /></DataTrigger>
+                <DataTrigger Binding="{Binding ColorLabel}" Value="Orange"><Setter Property="Background" Value="{DynamicResource PhotoLabelOrangeBackground}" /></DataTrigger>
+                <DataTrigger Binding="{Binding ColorLabel}" Value="Yellow"><Setter Property="Background" Value="{DynamicResource PhotoLabelYellowBackground}" /></DataTrigger>
+                <DataTrigger Binding="{Binding ColorLabel}" Value="Green"><Setter Property="Background" Value="{DynamicResource PhotoLabelGreenBackground}" /></DataTrigger>
+                <DataTrigger Binding="{Binding ColorLabel}" Value="Blue"><Setter Property="Background" Value="{DynamicResource PhotoLabelBlueBackground}" /></DataTrigger>
+                <DataTrigger Binding="{Binding ColorLabel}" Value="Purple"><Setter Property="Background" Value="{DynamicResource PhotoLabelPurpleBackground}" /></DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Nome que vira caixa de texto ao renomear no lugar (F2 / nova pasta) -->
+        <DataTemplate x:Key="EditableName">
+            <Grid>
+                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" FontWeight="Medium" Foreground="{DynamicResource HeadingBrush}" ToolTip="{Binding Name}"
+                           Visibility="{Binding IsNotEditing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <DockPanel Visibility="{Binding IsEditing, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding Extension}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="2,0,0,0" />
+                    <TextBox Text="{Binding EditText, UpdateSourceTrigger=PropertyChanged}" Padding="2,0" MinWidth="40"
+                             IsVisibleChanged="RenameBox_IsVisibleChanged" KeyDown="RenameBox_KeyDown" LostKeyboardFocus="RenameBox_LostFocus" />
+                </DockPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="GridItemTemplate" DataType="{x:Type views:TransferItemViewModel}">
+            <Grid Background="Transparent">
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <Border Height="{Binding DataContext.ImageHeight, RelativeSource={RelativeSource AncestorType=UserControl}}" Background="{DynamicResource PlaceholderBrush}" CornerRadius="6" ClipToBounds="True" Margin="4,4,4,0">
+                    <Grid>
+                        <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="34" Foreground="#8A97AB" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{Binding ShowGlyph, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <Image Source="{Binding ThumbnailUri}" Stretch="Uniform" RenderOptions.BitmapScalingMode="LowQuality" />
+                        <Ellipse Width="14" Height="14" Fill="{Binding ColorBrush}" Stroke="White" StrokeThickness="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6" ToolTip="{Binding ColorToolTip}"
+                                 Visibility="{Binding HasColor, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <Border Style="{StaticResource CompareBadge}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="5">
+                            <TextBlock Text="{Binding CompareText}" Foreground="White" FontSize="10" FontWeight="SemiBold" />
+                        </Border>
+                        <Border Visibility="{Binding IsDuplicate, Converter={StaticResource BooleanToVisibilityConverter}}" Background="#CC7C3AED" CornerRadius="4" Padding="5,1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5" ToolTip="{Binding DuplicateToolTip}">
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8C8;" FontFamily="{StaticResource IconFont}" FontSize="9" Foreground="White" VerticalAlignment="Center" Margin="0,0,4,0" /><TextBlock Text="Duplicado" Foreground="White" FontSize="10" FontWeight="SemiBold" /></StackPanel>
+                        </Border>
+                        <Border Visibility="{Binding IsVideo, Converter={StaticResource BooleanToVisibilityConverter}}" Width="26" Height="26" CornerRadius="13" Background="#99000000" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="6" IsHitTestVisible="False">
+                            <TextBlock Text="&#xE768;" FontFamily="{StaticResource IconFont}" FontSize="11" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0,0,0" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <ContentPresenter Grid.Row="1" Content="{Binding}" ContentTemplate="{StaticResource EditableName}" Margin="6,6,6,0" />
+                <TextBlock Grid.Row="2" Text="{Binding SizeText}" Margin="6,1,6,4" FontSize="11" Foreground="{DynamicResource MutedBrush}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Border x:Name="Frame" Style="{StaticResource Card}" Padding="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <!-- Faixa de "painel ativo" (os Locais abrem aqui) -->
+            <Border Grid.RowSpan="6" Margin="-10,-10,-10,-10" CornerRadius="10" BorderThickness="2" IsHitTestVisible="False">
+                <Border.Style>
+                    <Style TargetType="Border"><Setter Property="BorderBrush" Value="Transparent" /><Style.Triggers><DataTrigger Binding="{Binding IsActive}" Value="True"><Setter Property="BorderBrush" Value="#802563EB" /></DataTrigger></Style.Triggers></Style>
+                </Border.Style>
+            </Border>
+
+            <!-- Navegação: voltar, avançar, subir, atualizar, caminho, fixar, escolher -->
+            <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                <Button DockPanel.Dock="Left" Style="{StaticResource IconButton}" Command="{Binding BackCommand}" ToolTip="Voltar (Backspace)" Margin="0,0,2,0"><TextBlock Text="&#xE72B;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button DockPanel.Dock="Left" Style="{StaticResource IconButton}" Command="{Binding ForwardCommand}" ToolTip="Avançar" Margin="0,0,2,0"><TextBlock Text="&#xE72A;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button DockPanel.Dock="Left" Style="{StaticResource IconButton}" Command="{Binding UpCommand}" ToolTip="Pasta superior" Margin="0,0,2,0"><TextBlock Text="&#xE74A;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button DockPanel.Dock="Left" Style="{StaticResource IconButton}" Command="{Binding RefreshCommand}" ToolTip="Atualizar (F5)" Margin="0,0,8,0"><TextBlock Text="&#xE72C;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button DockPanel.Dock="Right" x:Name="ChooseButton" Command="{Binding ChooseFolderCommand}" Content="Selecionar pasta…" Padding="10,4" Margin="4,0,0,0" ToolTip="Abre qualquer pasta, mesmo fora do catálogo" />
+                <Button DockPanel.Dock="Right" x:Name="PinButton" Style="{StaticResource IconButton}" Command="{Binding PinCommand}" ToolTip="{Binding PinToolTip}"><TextBlock Text="{Binding PinGlyph}" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Command="{Binding BeginEditPathCommand}" ToolTip="Digitar o caminho"><TextBlock Text="&#xE70F;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Grid>
+                    <TextBox x:Name="PathBox" Text="{Binding PathText, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Visibility="{Binding IsEditingPath, Converter={StaticResource BooleanToVisibilityConverter}}"
+                             IsVisibleChanged="PathBox_IsVisibleChanged" LostKeyboardFocus="PathBox_LostFocus">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Return" Command="{Binding CommitPathCommand}" />
+                            <KeyBinding Key="Escape" Command="{Binding CancelEditPathCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" VerticalAlignment="Center">
+                        <ScrollViewer.Style>
+                            <Style TargetType="ScrollViewer"><Setter Property="Visibility" Value="Visible" /><Style.Triggers><DataTrigger Binding="{Binding IsEditingPath}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style>
+                        </ScrollViewer.Style>
+                        <ItemsControl ItemsSource="{Binding Breadcrumb}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="9" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="2,0" />
+                                        <Button Content="{Binding Label}" Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Padding="6,3" Background="Transparent" BorderThickness="0" ToolTip="{Binding Path}"
+                                                AllowDrop="True" DragOver="Breadcrumb_DragOver" Drop="Breadcrumb_Drop" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </DockPanel>
+
+            <!-- Busca e filtros (só deste lado) -->
+            <DockPanel Grid.Row="1" Margin="0,0,0,8">
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Command="{Binding ClearFiltersCommand}" ToolTip="Limpar busca e filtros" Margin="4,0,0,0"><TextBlock Text="&#xE894;" FontFamily="{StaticResource IconFont}" /></Button>
+                <ComboBox DockPanel.Dock="Right" ItemsSource="{x:Static views:TransferPaneViewModel.ColorFilterChoices}" SelectedItem="{Binding ColorFilter}" Width="96" ToolTip="Filtrar por cor" Margin="6,0,0,0" />
+                <ComboBox DockPanel.Dock="Right" ItemsSource="{x:Static views:TransferPaneViewModel.TypeFilterChoices}" SelectedItem="{Binding TypeFilter}" Width="150" ToolTip="Filtrar por tipo" Margin="6,0,0,0" />
+                <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Pesquisar nesta pasta (nome ou extensão)" VerticalContentAlignment="Center" MinWidth="80" />
+            </DockPanel>
+
+            <!-- Barra de ferramentas: modo, organização, ordenação e tamanho (quebra linha em painéis estreitos) -->
+            <WrapPanel Grid.Row="2" Margin="0,0,0,8">
+                <ToggleButton x:Name="GridModeButton" Padding="9,4" ToolTip="Miniaturas" IsChecked="{Binding IsGridMode, Mode=OneWay}" Click="GridMode_Click"><TextBlock Text="&#xE80A;" FontFamily="{StaticResource IconFont}" /></ToggleButton>
+                <ToggleButton x:Name="ListModeButton" Padding="9,4" ToolTip="Lista" Margin="2,0,0,0" IsChecked="{Binding IsListMode, Mode=OneWay}" Click="ListMode_Click"><TextBlock Text="&#xE8FD;" FontFamily="{StaticResource IconFont}" /></ToggleButton>
+                <Border Width="1" Background="{DynamicResource BorderBrush}" Margin="8,2" />
+                <Button x:Name="NewFolderButton" Command="{Binding NewFolderCommand}" Padding="8,4" ToolTip="Criar uma pasta aqui (Ctrl+Shift+N)">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F4;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Nova pasta" /></StackPanel>
+                </Button>
+                <Button x:Name="RenameButton" Style="{StaticResource IconButton}" Command="{Binding RenameCommand}" ToolTip="Renomear (F2) — vários arquivos: renomear em lote" Margin="4,0,0,0"><TextBlock Text="&#xE8AC;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button x:Name="ColorButton" Style="{StaticResource IconButton}" IsEnabled="{Binding CanColor}" ContextMenu="{StaticResource ColorMenu}" Click="ColorButton_Click" ToolTip="Cor da seleção (teclas 1 a 6; 0 remove)" Margin="2,0,0,0"><TextBlock Text="&#xE790;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button x:Name="OrganizeButton" Style="{StaticResource IconButton}" Command="{Binding OrganizeByDateCommand}" ToolTip="Organizar por data (pastas Ano\Mês…)" Margin="2,0,0,0"><TextBlock Text="&#xE787;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button x:Name="DeleteButton" Style="{StaticResource IconButton}" Command="{Binding DeleteCommand}" ToolTip="Enviar a seleção para a Lixeira (Del)" Margin="2,0,0,0"><TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" /></Button>
+                <ToggleButton x:Name="DetailsButton" Padding="8,4" IsChecked="{Binding ShowDetails}" ToolTip="Painel de detalhes (data, câmera, resolução, duração…)" Margin="4,0,0,0"><TextBlock Text="&#xE946;" FontFamily="{StaticResource IconFont}" /></ToggleButton>
+                <Border Width="1" Background="{DynamicResource BorderBrush}" Margin="8,2" />
+                <ComboBox ItemsSource="{x:Static views:TransferPaneViewModel.SortOptions}" SelectedItem="{Binding SortOption}" DisplayMemberPath="Label" Width="92" ToolTip="Ordenar por" />
+                <Button Style="{StaticResource IconButton}" Command="{Binding ToggleSortDirectionCommand}" ToolTip="Inverter a ordem" Margin="2,0,0,0"><TextBlock Text="{Binding SortArrow}" FontFamily="{StaticResource IconFont}" /></Button>
+                <CheckBox Content="Pastas primeiro" IsChecked="{Binding FoldersFirst}" VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12" />
+                <Slider Minimum="80" Maximum="260" Value="{Binding ThumbnailSize}" Width="100" VerticalAlignment="Center" Margin="10,0,0,0" ToolTip="Tamanho das miniaturas"
+                        Visibility="{Binding IsGridMode, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </WrapPanel>
+
+            <!-- Conteúdo -->
+            <Grid Grid.Row="3">
+                <ListBox x:Name="GridList" ItemsSource="{Binding Items}" ItemTemplate="{StaticResource GridItemTemplate}" ItemContainerStyle="{StaticResource PhotoCardContainer}" SelectionMode="Extended"
+                         BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True" VirtualizingPanel.IsVirtualizing="True"
+                         SelectionChanged="List_SelectionChanged" MouseDoubleClick="List_MouseDoubleClick" Visibility="{Binding IsGridMode, Converter={StaticResource BooleanToVisibilityConverter}}"
+                         ContextMenu="{StaticResource PaneMenu}" PreviewMouseRightButtonDown="List_PreviewMouseRightButtonDown"
+                         AllowDrop="True" PreviewMouseLeftButtonDown="List_PreviewMouseLeftButtonDown" PreviewMouseMove="List_PreviewMouseMove" DragOver="List_DragOver" DragLeave="List_DragLeave" Drop="List_Drop">
+                    <ListBox.ItemsPanel><ItemsPanelTemplate><controls:VirtualizingWrapPanel ItemWidth="{Binding CardWidth}" ItemHeight="{Binding CardHeight}" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                </ListBox>
+
+                <ListView x:Name="DetailList" ItemsSource="{Binding Items}" SelectionMode="Extended" BorderThickness="0" Background="Transparent" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True"
+                          SelectionChanged="List_SelectionChanged" MouseDoubleClick="List_MouseDoubleClick" Visibility="{Binding IsListMode, Converter={StaticResource BooleanToVisibilityConverter}}"
+                          ItemContainerStyle="{StaticResource ColoredRow}" ContextMenu="{StaticResource PaneMenu}" PreviewMouseRightButtonDown="List_PreviewMouseRightButtonDown"
+                          AllowDrop="True" PreviewMouseLeftButtonDown="List_PreviewMouseLeftButtonDown" PreviewMouseMove="List_PreviewMouseMove" DragOver="List_DragOver" DragLeave="List_DragLeave" Drop="List_Drop">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Width="320">
+                                <GridViewColumnHeader Tag="Name" Click="ColumnHeader_Click" Content="Nome" HorizontalContentAlignment="Left" />
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <DockPanel>
+                                            <Grid DockPanel.Dock="Left" Width="16" VerticalAlignment="Center" ToolTip="{Binding ColorToolTip}">
+                                                <Ellipse Width="10" Height="10" Fill="{Binding ColorBrush}" HorizontalAlignment="Left" Visibility="{Binding HasColor, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                            </Grid>
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" Width="20" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+                                            <Border DockPanel.Dock="Right" Style="{StaticResource CompareBadge}" Margin="6,0,0,0" VerticalAlignment="Center"><TextBlock Text="{Binding CompareText}" Foreground="White" FontSize="10" FontWeight="SemiBold" /></Border>
+                                            <TextBlock DockPanel.Dock="Right" Text="&#xE8C8;" FontFamily="{StaticResource IconFont}" Foreground="#7C3AED" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="{Binding DuplicateToolTip}"
+                                                       Visibility="{Binding IsDuplicate, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                            <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource EditableName}" VerticalAlignment="Center" />
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Width="70" DisplayMemberBinding="{Binding TypeText}"><GridViewColumnHeader Tag="Type" Click="ColumnHeader_Click" Content="Tipo" HorizontalContentAlignment="Left" /></GridViewColumn>
+                            <GridViewColumn Width="90" DisplayMemberBinding="{Binding SizeText}"><GridViewColumnHeader Tag="Size" Click="ColumnHeader_Click" Content="Tamanho" HorizontalContentAlignment="Left" /></GridViewColumn>
+                            <GridViewColumn Width="130" DisplayMemberBinding="{Binding DateText}"><GridViewColumnHeader Tag="Date" Click="ColumnHeader_Click" Content="Data" HorizontalContentAlignment="Left" /></GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Margin="20">
+                    <StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding IsEmpty}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+                    <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="38" Foreground="{DynamicResource StarOffBrush}" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding EmptyText}" TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource MutedBrush}" Margin="0,10,0,0" MaxWidth="320" />
+                </StackPanel>
+                <!-- Dica de soltar: para onde vai e se copia ou move -->
+                <Border x:Name="DropHint" Visibility="Collapsed" IsHitTestVisible="False" Background="#EE2563EB" CornerRadius="6" Padding="12,6" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0">
+                    <TextBlock x:Name="DropHintText" Foreground="White" FontWeight="SemiBold" />
+                </Border>
+                <ProgressBar IsIndeterminate="True" Height="3" VerticalAlignment="Top" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </Grid>
+
+            <!-- Detalhes do item selecionado (ou da pasta atual) -->
+            <Border Grid.Row="4" Margin="0,8,0,0" Padding="10,8" Background="{DynamicResource SidebarBrush}" CornerRadius="6" MaxHeight="190"
+                    Visibility="{Binding ShowDetails, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="DetailsList" ItemsSource="{Binding Details}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,1">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="110" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Value}" Foreground="{DynamicResource TextBrush}" FontSize="12" TextWrapping="Wrap" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+            <StackPanel Grid.Row="5" Margin="0,8,0,0">
+                <TextBlock x:Name="MessageLine" Text="{Binding MessageText}" Foreground="{DynamicResource HeadingBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,4"
+                           Visibility="{Binding HasMessage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding SelectionText}" Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource MutedBrush}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

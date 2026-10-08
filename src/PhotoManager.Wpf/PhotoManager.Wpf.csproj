@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>PhotoManager</AssemblyName>
+    <RootNamespace>PhotoManager.Wpf</RootNamespace>
+    <ApplicationIcon>Assets\PhotoManager.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Assets\PhotoManager.ico" />
+    <Resource Include="Assets\PhotoManager.ico" />
+    <Using Include="System.IO" />
+    <ProjectReference Include="..\PhotoManager.Application\PhotoManager.Application.csproj" />
+    <ProjectReference Include="..\PhotoManager.Domain\PhotoManager.Domain.csproj" />
+    <ProjectReference Include="..\PhotoManager.Infrastructure\PhotoManager.Infrastructure.csproj" />
+    <ProjectReference Include="..\PhotoManager.Persistence\PhotoManager.Persistence.csproj" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+  </ItemGroup>
+</Project>

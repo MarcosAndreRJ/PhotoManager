@@ -1,0 +1,61 @@
+<Window x:Class="PhotoManager.Wpf.Views.CollectionNameDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:PhotoManager.Wpf.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:CollectionNameViewModel}"
+        Title="{Binding Title}"
+        Width="420"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{DynamicResource WindowBackground}"
+        Loaded="Window_Loaded">
+    <Border Padding="20">
+        <StackPanel>
+            <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" Margin="0,0,0,12" />
+            
+            <TextBlock Text="Nome da coleção" Style="{StaticResource FieldLabel}" />
+            <TextBox x:Name="NameInput"
+                     Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,6"
+                     MaxLength="100" />
+
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource FavoriteBrush}"
+                       FontSize="12"
+                       Margin="0,0,0,16"
+                       TextWrapping="Wrap"
+                       MinHeight="18">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter Property="Visibility" Value="Hidden" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <DockPanel LastChildFill="False">
+                <Button Content="Cancelar"
+                        IsCancel="True"
+                        DockPanel.Dock="Right"
+                        Width="90"
+                        Margin="10,0,0,0" />
+                <Button Content="{Binding ConfirmButtonText}"
+                        Style="{StaticResource AccentButton}"
+                        IsDefault="True"
+                        IsEnabled="{Binding IsValid}"
+                        DockPanel.Dock="Right"
+                        Width="90"
+                        Click="SaveButton_Click" />
+            </DockPanel>
+        </StackPanel>
+    </Border>
+</Window>

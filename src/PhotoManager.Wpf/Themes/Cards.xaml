@@ -1,0 +1,98 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="20" />
+    </Style>
+
+    <Style x:Key="StatusBadge" TargetType="Border">
+        <Setter Property="Background" Value="#CC111A2B" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+
+    <!-- Caixa de seleção sobre a miniatura: sempre visível; marcada = azul cheio com check branco -->
+    <Style x:Key="CardCheckBox" TargetType="CheckBox">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Border x:Name="Box" Width="24" Height="24" CornerRadius="6" Background="#E6FFFFFF" BorderBrush="#99475569" BorderThickness="1.5">
+                        <TextBlock x:Name="Mark" Text="&#xE73E;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}" /></Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource AccentBrush}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="White" />
+                            <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Item do filmstrip do modo de revisão -->
+    <Style x:Key="FilmstripItem" TargetType="ListBoxItem">
+        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Frame" Background="#1C2A44" BorderBrush="Transparent" BorderThickness="2" CornerRadius="6" Padding="0">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="#6B8FE8" /></Trigger>
+                        <Trigger Property="IsSelected" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AccentBrush}" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Container do grid de miniaturas. Estados independentes: etiqueta de cor (fundo suave + borda discreta), hover (realce leve) e seleção (borda azul mais grossa; o fundo da etiqueta continua). Ordem dos gatilhos = prioridade. -->
+    <Style x:Key="PhotoCardContainer" TargetType="ListBoxItem">
+        <Setter Property="Margin" Value="0,0,12,12" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Frame" Background="{DynamicResource PhotoCardDefaultBackground}" BorderBrush="{DynamicResource PhotoCardDefaultBorder}" BorderThickness="2" CornerRadius="10" Padding="6">
+                        <Grid>
+                            <Border x:Name="HoverOverlay" Margin="-4" CornerRadius="8" Background="Transparent" IsHitTestVisible="False" />
+                            <ContentPresenter />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding ColorLabel}" Value="Red"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelRedBackground}" /><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource PhotoLabelRedBorder}" /></DataTrigger>
+                        <DataTrigger Binding="{Binding ColorLabel}" Value="Orange"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelOrangeBackground}" /><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource PhotoLabelOrangeBorder}" /></DataTrigger>
+                        <DataTrigger Binding="{Binding ColorLabel}" Value="Yellow"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelYellowBackground}" /><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource PhotoLabelYellowBorder}" /></DataTrigger>
+                        <DataTrigger Binding="{Binding ColorLabel}" Value="Green"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelGreenBackground}" /><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource PhotoLabelGreenBorder}" /></DataTrigger>
+                        <DataTrigger Binding="{Binding ColorLabel}" Value="Blue"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelBlueBackground}" /><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource PhotoLabelBlueBorder}" /></DataTrigger>
+                        <DataTrigger Binding="{Binding ColorLabel}" Value="Purple"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelPurpleBackground}" /><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource PhotoLabelPurpleBorder}" /></DataTrigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="HoverOverlay" Property="Background" Value="{DynamicResource PhotoCardHoverOverlay}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoCardSelectedBackground}" />
+                            <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource PhotoCardSelectedBorder}" />
+                            <Setter TargetName="Frame" Property="BorderThickness" Value="3" />
+                            <Setter TargetName="Frame" Property="Padding" Value="5" />
+                        </Trigger>
+                            <DataTrigger Binding="{Binding ColorLabel}" Value="Red"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelRedBackground}" /></DataTrigger>
+                            <DataTrigger Binding="{Binding ColorLabel}" Value="Orange"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelOrangeBackground}" /></DataTrigger>
+                            <DataTrigger Binding="{Binding ColorLabel}" Value="Yellow"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelYellowBackground}" /></DataTrigger>
+                            <DataTrigger Binding="{Binding ColorLabel}" Value="Green"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelGreenBackground}" /></DataTrigger>
+                            <DataTrigger Binding="{Binding ColorLabel}" Value="Blue"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelBlueBackground}" /></DataTrigger>
+                            <DataTrigger Binding="{Binding ColorLabel}" Value="Purple"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource PhotoLabelPurpleBackground}" /></DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

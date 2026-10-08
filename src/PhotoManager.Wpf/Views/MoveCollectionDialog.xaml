@@ -1,0 +1,126 @@
+<Window x:Class="PhotoManager.Wpf.Views.MoveCollectionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:PhotoManager.Wpf.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MoveCollectionViewModel}"
+        Title="Mover coleção"
+        Width="460"
+        Height="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False"
+        Background="{DynamicResource WindowBackground}">
+    <Border Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="Mover coleção" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" Margin="0,0,0,4" />
+            <TextBlock Grid.Row="1" Foreground="{DynamicResource MutedBrush}" FontSize="13" Margin="0,0,0,12">
+                <Run Text="Escolha o novo local de destino para a coleção " />
+                <Run Text="{Binding CollectionName, Mode=OneWay, StringFormat=«{0}»}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                <Run Text=":" />
+            </TextBlock>
+
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,16">
+                <ListBox ItemsSource="{Binding Destinations}"
+                         SelectedItem="{Binding SelectedDestination}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         Padding="4">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+                            <Setter Property="Padding" Value="8,6" />
+                            <Setter Property="Margin" Value="0,1" />
+                            <Setter Property="Cursor" Value="Hand" />
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" Background="Transparent" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SoftAccentBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Opacity" Value="0.45" />
+                                                <Setter Property="Cursor" Value="No" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel ToolTip="{Binding DisabledReason}">
+                                <TextBlock Text="{Binding IndentedLabel}" FontSize="13" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                                                    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding DisabledReason, StringFormat=({0})}"
+                                           Foreground="{DynamicResource MutedBrush}"
+                                           FontSize="11"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="()">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </Trigger>
+                                                <DataTrigger Binding="{Binding DisabledReason}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <DockPanel Grid.Row="3" LastChildFill="False">
+                <Button Content="Cancelar"
+                        IsCancel="True"
+                        DockPanel.Dock="Right"
+                        Width="90"
+                        Margin="10,0,0,0" />
+                <Button Content="Mover"
+                        Style="{StaticResource AccentButton}"
+                        IsDefault="True"
+                        IsEnabled="{Binding CanMove}"
+                        DockPanel.Dock="Right"
+                        Width="90"
+                        Click="MoveButton_Click" />
+            </DockPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -1,0 +1,43 @@
+<Window x:Class="PhotoManager.Wpf.Views.OrganizeByDateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Organizar por data" Width="600" Height="580" WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip" ShowInTaskbar="False"
+        Background="{DynamicResource WindowBackground}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Text="Organizar por data" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+            <TextBlock Text="Cria pastas pela data da foto/vídeo (EXIF; sem ela, a data de modificação) e coloca cada arquivo na sua." Foreground="{DynamicResource MutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,12" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <TextBlock Text="Modelo das pastas" Style="{StaticResource FieldLabel}" />
+            <ComboBox ItemsSource="{Binding Patterns}" SelectedItem="{Binding Pattern}" DisplayMemberPath="Label" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <StackPanel Margin="0,0,30,0">
+                <TextBlock Text="Onde criar as pastas" Style="{StaticResource FieldLabel}" />
+                <RadioButton Content="Nesta pasta" IsChecked="{Binding UseThisFolder}" GroupName="where" Margin="0,2" />
+                <RadioButton Content="Na pasta do outro painel" IsChecked="{Binding UseOtherPane}" IsEnabled="{Binding CanUseOtherPane}" GroupName="where" Margin="0,2" ToolTip="{Binding OtherPaneFolder}" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Ação" Style="{StaticResource FieldLabel}" />
+                <RadioButton Content="Mover" IsChecked="{Binding Move}" GroupName="how" Margin="0,2" />
+                <RadioButton Content="Copiar (mantém os originais)" IsChecked="{Binding Copy}" GroupName="how" Margin="0,2" />
+            </StackPanel>
+        </StackPanel>
+        <TextBlock Grid.Row="3" Text="{Binding Summary}" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,8" />
+        <ListView Grid.Row="4" ItemsSource="{Binding Preview}" BorderBrush="{DynamicResource BorderBrush}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Pasta" Width="400" DisplayMemberBinding="{Binding Folder}" />
+                    <GridViewColumn Header="Arquivos" Width="90" DisplayMemberBinding="{Binding Count}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <DockPanel Grid.Row="5" LastChildFill="False" Margin="0,12,0,0">
+            <Button Content="Cancelar" IsCancel="True" DockPanel.Dock="Right" Width="100" Margin="10,0,0,0" />
+            <Button Content="{Binding ConfirmText}" Style="{StaticResource AccentButton}" IsDefault="True" DockPanel.Dock="Right" Width="110" Click="Confirm_Click" />
+            <TextBlock DockPanel.Dock="Left" Text="Ctrl+Z desfaz depois." Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center" />
+        </DockPanel>
+    </Grid>
+</Window>

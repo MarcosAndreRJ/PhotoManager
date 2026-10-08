@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Tema escuro: mesmas chaves do Colors.xaml (a troca é feita em tempo real pelo ThemeService). Fundo neutro para não alterar a percepção de cor das fotos. -->
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+    <SolidColorBrush x:Key="WindowBackground" Color="#0F1319" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#171C24" />
+    <SolidColorBrush x:Key="SidebarBrush" Color="#13171E" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#2A313D" />
+    <SolidColorBrush x:Key="HoverBrush" Color="#222936" />
+
+    <SolidColorBrush x:Key="HeadingBrush" Color="#EDF1F7" />
+    <SolidColorBrush x:Key="TextBrush" Color="#C7CFDB" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#8893A5" />
+
+    <SolidColorBrush x:Key="AccentBrush" Color="#5B9BFF" />
+    <SolidColorBrush x:Key="SoftAccentBrush" Color="#1C2A44" />
+    <SolidColorBrush x:Key="StarBrush" Color="#F5B301" />
+    <SolidColorBrush x:Key="StarOffBrush" Color="#3E4757" />
+    <SolidColorBrush x:Key="FavoriteBrush" Color="#F26B70" />
+
+    <SolidColorBrush x:Key="NavBarBrush" Color="#0A0D12" />
+    <SolidColorBrush x:Key="NavTextBrush" Color="#C6D0E0" />
+    <SolidColorBrush x:Key="NavHoverBrush" Color="#1A2130" />
+
+    <SolidColorBrush x:Key="PhotoCardDefaultBackground" Color="#171C24" />
+    <SolidColorBrush x:Key="PhotoCardDefaultBorder" Color="#2A313D" />
+    <SolidColorBrush x:Key="PhotoCardSelectedBorder" Color="#5B9BFF" />
+    <SolidColorBrush x:Key="PhotoCardSelectedBackground" Color="#1C2A44" />
+    <SolidColorBrush x:Key="PhotoCardHoverBorder" Color="#3F5D92" />
+    <SolidColorBrush x:Key="PhotoCardHoverOverlay" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="PhotoLabelRedBackground" Color="#33EF4444" />
+    <SolidColorBrush x:Key="PhotoLabelRedBorder" Color="#CCEF4444" />
+    <SolidColorBrush x:Key="PhotoLabelOrangeBackground" Color="#33F97316" />
+    <SolidColorBrush x:Key="PhotoLabelOrangeBorder" Color="#CCF97316" />
+    <SolidColorBrush x:Key="PhotoLabelYellowBackground" Color="#33EAB308" />
+    <SolidColorBrush x:Key="PhotoLabelYellowBorder" Color="#CCEAB308" />
+    <SolidColorBrush x:Key="PhotoLabelGreenBackground" Color="#3322C55E" />
+    <SolidColorBrush x:Key="PhotoLabelGreenBorder" Color="#CC22C55E" />
+    <SolidColorBrush x:Key="PhotoLabelBlueBackground" Color="#333B82F6" />
+    <SolidColorBrush x:Key="PhotoLabelBlueBorder" Color="#CC3B82F6" />
+    <SolidColorBrush x:Key="PhotoLabelPurpleBackground" Color="#33A855F7" />
+    <SolidColorBrush x:Key="PhotoLabelPurpleBorder" Color="#CCA855F7" />
+
+    <SolidColorBrush x:Key="PlaceholderBrush" Color="#212833" />
+    <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#3A2F12" />
+    <SolidColorBrush x:Key="WarningBorderBrush" Color="#6B5317" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#3D1C1E" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#22C55E" />
+    <SolidColorBrush x:Key="RejectBrush" Color="#F05252" />
+    <SolidColorBrush x:Key="ScrimBrush" Color="#B3000000" />
+</ResourceDictionary>

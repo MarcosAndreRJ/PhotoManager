@@ -1,0 +1,138 @@
+<UserControl x:Class="PhotoManager.Wpf.Views.MicrostockView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel Margin="24">
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,14">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Central de produção" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="Prepare e revise fotos localmente antes de qualquer envio manual." Style="{StaticResource PageSubtitle}" Margin="0,4,0,0" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Perfil ativo" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" Margin="0,0,8,0" />
+                <ComboBox Width="190" ItemsSource="{Binding Profiles}" SelectedItem="{Binding ActiveProfile, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Content="↻" ToolTip="Atualizar" Command="{Binding RefreshCommand}" Style="{StaticResource AccentButton}" Margin="8,0,0,0" />
+            </StackPanel>
+            <ProgressBar Grid.Row="1" Grid.ColumnSpan="2" Height="4" Margin="0,12,0,0" Minimum="0" Maximum="{Binding TotalCount}" Value="{Binding ProgressValue, Mode=OneWay}" />
+        </Grid>
+
+        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="10" Margin="0,0,0,14">
+            <StackPanel>
+            <UniformGrid Rows="1" Columns="8">
+                <Button Content="{Binding AllCountText}" Command="{Binding SelectFilterCommand}" CommandParameter="All" Background="Transparent" BorderThickness="0" Padding="8,4" />
+                <Button Content="{Binding NotPreparedCountText}" Command="{Binding SelectFilterCommand}" CommandParameter="NotPrepared" Background="Transparent" BorderThickness="0" Padding="8,4" />
+                <Button Content="{Binding MetadataIncompleteCountText}" Command="{Binding SelectFilterCommand}" CommandParameter="MetadataIncomplete" Background="Transparent" BorderThickness="0" Padding="8,4" />
+                <Button Content="{Binding ReadyCountText}" Command="{Binding SelectFilterCommand}" CommandParameter="ReadyForSubmission" Background="Transparent" BorderThickness="0" Padding="8,4" />
+                <Button Content="{Binding PartialCountText}" Command="{Binding SelectFilterCommand}" CommandParameter="PartiallyUploaded" Background="Transparent" BorderThickness="0" Padding="8,4" />
+                <Button Content="{Binding UploadedCountText}" Command="{Binding SelectFilterCommand}" CommandParameter="UploadedToAll" Background="Transparent" BorderThickness="0" Padding="8,4" />
+                <Button Content="{Binding ErrorCountText}" Command="{Binding SelectFilterCommand}" CommandParameter="Error" Background="Transparent" BorderThickness="0" Padding="8,4" />
+                <Button Content="{Binding ChangedCountText}" Command="{Binding SelectFilterCommand}" CommandParameter="ChangedAfterUpload" Background="Transparent" BorderThickness="0" Padding="8,4" />
+            </UniformGrid>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <TextBlock Text="Banco" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" Margin="0,0,6,0" />
+                <ComboBox Width="150" ItemsSource="{Binding AgencyFilters}" SelectedValuePath="Id" SelectedValue="{Binding AgencyFilterId, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Text="Estado" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" Margin="14,0,6,0" />
+                <ComboBox Width="120" ItemsSource="{Binding UploadStatusFilters}" SelectedItem="{Binding UploadStatusFilter, Mode=TwoWay}" />
+            </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="300"/></Grid.ColumnDefinitions>
+            <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <DataGrid x:Name="ProductionGrid" Grid.Row="0" Grid.Column="0" ItemsSource="{Binding FilteredRows}" SelectedItem="{Binding SelectedRow, Mode=TwoWay}" SelectionMode="Extended" SelectionChanged="ProductionGrid_SelectionChanged" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="0,0,14,0">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Foto" Binding="{Binding FileName}" Width="1.4*" />
+                    <DataGridTextColumn Header="Metadata" Binding="{Binding MetadataSummary}" Width="1.1*" />
+                    <DataGridTextColumn Header="Adobe Stock" Binding="{Binding AdobeStockStatus}" Width="1.1*" />
+                    <DataGridTextColumn Header="Shutterstock" Binding="{Binding ShutterstockStatus}" Width="1.1*" />
+                    <DataGridTextColumn Header="Depositphotos" Binding="{Binding DepositphotosStatus}" Width="1.1*" />
+                    <DataGridTextColumn Header="Dreamstime" Binding="{Binding DreamstimeStatus}" Width="1.1*" />
+                    <DataGridTextColumn Header="123RF" Binding="{Binding OneTwoThreeRfStatus}" Width="1.1*" />
+                    <DataGridTextColumn Header="Resumo de envios" Binding="{Binding AgencyStatusSummary}" Width="1.8*" />
+                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="1.4*" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <ScrollViewer Grid.Row="0" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Foto selecionada" Style="{StaticResource SectionLabel}" />
+                            <TextBlock Text="{Binding SelectedRow.FileName, TargetNullValue=Nenhuma}" FontWeight="SemiBold" Margin="0,8,0,4" />
+                            <TextBlock Text="{Binding SelectedRow.MetadataDetails, TargetNullValue=Selecione uma foto.}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+                            <TextBlock Text="Pendências" Style="{StaticResource SectionLabel}" Margin="0,14,0,4" />
+                            <TextBlock Text="{Binding SelectedIssues}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+                            <Button Content="Abrir em Metadados" Command="{Binding OpenMetadataCommand}" CommandParameter="{Binding SelectedRow}" Style="{StaticResource AccentButton}" Margin="0,14,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Histórico de envio manual" Style="{StaticResource SectionLabel}" />
+                            <TextBlock Text="{Binding SelectedCountText}" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,6" />
+                            <ListBox ItemsSource="{Binding Agencies}" MaxHeight="125" BorderThickness="0" Background="Transparent">
+                                <ListBox.ItemTemplate><DataTemplate><CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding IsActive}" /></DataTemplate></ListBox.ItemTemplate>
+                            </ListBox>
+                            <TextBox Text="{Binding RemoteFileName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Nome remoto opcional" Margin="0,6,0,4" />
+                            <TextBox Text="{Binding IssueReason, UpdateSourceTrigger=PropertyChanged}" ToolTip="Motivo de erro/rejeição" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding UploadNotes, UpdateSourceTrigger=PropertyChanged}" ToolTip="Observações" Margin="0,0,0,6" />
+                            <WrapPanel>
+                                <Button Content="Marcar enviado" Command="{Binding MarkUploadedCommand}" Style="{StaticResource AccentButton}" />
+                                <Button Content="Erro" Command="{Binding MarkErrorCommand}" Margin="5,0,0,0" />
+                                <Button Content="Rejeitado" Command="{Binding MarkRejectedCommand}" Margin="5,0,0,0" />
+                                <Button Content="Desfazer" Command="{Binding UndoMarkingCommand}" Margin="5,0,0,0" />
+                            </WrapPanel>
+                            <TextBlock Text="{Binding OperationText}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="0,7,0,0" />
+                            <ItemsControl ItemsSource="{Binding HistoryRows}" Margin="0,8,0,0">
+                                <ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,0,0,6"><TextBlock Text="{Binding AgencyName}" FontWeight="SemiBold"/><TextBlock Text="{Binding Status}"/><TextBlock Text="{Binding DateText}" Foreground="{DynamicResource MutedBrush}"/><TextBlock Text="{Binding Details}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/></StackPanel></DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Bancos de microstock" Style="{StaticResource SectionLabel}" />
+                            <ListBox ItemsSource="{Binding Agencies}" SelectedItem="{Binding SelectedAgency, Mode=TwoWay}" DisplayMemberPath="Name" MaxHeight="110" Margin="0,8,0,6" />
+                            <TextBox Text="{Binding AgencyNameDraft, UpdateSourceTrigger=PropertyChanged}" />
+                            <WrapPanel Margin="0,6,0,0">
+                                <Button Content="Adicionar" Command="{Binding AddAgencyCommand}" />
+                                <Button Content="Salvar" Command="{Binding SaveAgencyCommand}" Margin="5,0,0,0" />
+                                <Button Content="Ativar/desativar" Command="{Binding ToggleAgencyCommand}" Margin="5,0,0,0" />
+                                <Button Content="↑" Command="{Binding MoveAgencyUpCommand}" Margin="5,0,0,0" />
+                                <Button Content="↓" Command="{Binding MoveAgencyDownCommand}" Margin="5,0,0,0" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Padding="14">
+                        <StackPanel>
+                            <TextBlock Text="Perfil de validação" Style="{StaticResource SectionLabel}" />
+                            <TextBox Text="{Binding ProfileName, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,6" />
+                            <WrapPanel>
+                                <CheckBox Content="Título obrigatório" IsChecked="{Binding TitleRequired}" Margin="0,0,10,5" />
+                                <CheckBox Content="Descrição obrigatória" IsChecked="{Binding DescriptionRequired}" Margin="0,0,0,5" />
+                                <CheckBox Content="Autor obrigatório" IsChecked="{Binding AuthorRequired}" Margin="0,0,10,5" />
+                                <CheckBox Content="Copyright obrigatório" IsChecked="{Binding CopyrightRequired}" Margin="0,0,0,5" />
+                            </WrapPanel>
+                            <TextBlock Text="Mín./máx. título" Foreground="{DynamicResource MutedBrush}" />
+                            <StackPanel Orientation="Horizontal"><TextBox Text="{Binding TitleMin}" Width="60" Margin="0,2,6,5"/><TextBox Text="{Binding TitleMax}" Width="60" Margin="0,2,0,5"/></StackPanel>
+                            <TextBlock Text="Mín./máx. palavras-chave" Foreground="{DynamicResource MutedBrush}" />
+                            <StackPanel Orientation="Horizontal"><TextBox Text="{Binding KeywordsMin}" Width="60" Margin="0,2,6,5"/><TextBox Text="{Binding KeywordsMax}" Width="60" Margin="0,2,0,5"/></StackPanel>
+                            <CheckBox Content="Exigir formato editável (JPEG)" IsChecked="{Binding RequireEditableFormat}" Margin="0,2,0,8" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Novo" Command="{Binding NewProfileCommand}" />
+                                <Button Content="Duplicar" Command="{Binding DuplicateProfileCommand}" />
+                                <Button Content="Salvar perfil" Command="{Binding SaveProfileCommand}" Style="{StaticResource AccentButton}" Margin="6,0,0,0" />
+                                <Button Content="Excluir" Command="{Binding DeleteProfileCommand}" Margin="6,0,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ProgressText}" Foreground="{DynamicResource MutedBrush}" Margin="0,8,0,0" />
+        </Grid>
+    </DockPanel>
+</UserControl>

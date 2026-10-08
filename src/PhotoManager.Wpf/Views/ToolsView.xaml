@@ -1,0 +1,263 @@
+<UserControl x:Class="PhotoManager.Wpf.Views.ToolsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <!-- Barra horizontal proporcional (armazenamento) -->
+        <DataTemplate x:Key="BarTemplate">
+            <Grid Margin="0,0,0,8" ToolTip="{Binding ToolTip}">
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding Value}" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+                    <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+                <ProgressBar Grid.Row="1" Value="{Binding Percent, Mode=OneWay}" Maximum="100" Height="6" Margin="0,3,0,0" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <DockPanel Margin="24">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <TextBlock Text="Ferramentas" Style="{StaticResource PageTitle}" />
+        </StackPanel>
+        <TabControl Style="{StaticResource UnderlineTabControl}">
+            <TabItem Header="Duplicatas exatas">
+                <DockPanel Margin="0,14,0,0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+            
+            <TextBlock Text="Encontre arquivos idênticos pelo conteúdo, sem comparar tudo com tudo." Style="{StaticResource PageSubtitle}" Margin="0,6,0,12" />
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Procurar duplicatas" Command="{Binding ScanCommand}" Style="{StaticResource AccentButton}" />
+                <ProgressBar Width="180" Height="5" Margin="12,0,8,0" VerticalAlignment="Center" Minimum="0" Maximum="100" Value="{Binding ProgressValue, Mode=OneWay}" />
+                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" />
+            </StackPanel>
+        </StackPanel>
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="260" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="12" Margin="0,0,14,0">
+                <StackPanel>
+                    <TextBlock Text="Grupos encontrados" Style="{StaticResource SectionLabel}" />
+                    <TextBlock Text="{Binding SummaryText}" Foreground="{DynamicResource MutedBrush}" Margin="0,6,0,8" />
+                    <ListBox ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup, Mode=TwoWay}" BorderThickness="0" Background="Transparent">
+                        <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="0,0,0,10"><TextBlock Text="{Binding Summary}" FontWeight="SemiBold" /><TextBlock Text="{Binding Hash}" FontSize="10" Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis" /></StackPanel></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Duplicatas exatas" Style="{StaticResource SectionLabel}" />
+                            <TextBlock Text="Selecione uma cópia para manter. As demais continuam no catálogo até uma ação explícita." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" Margin="0,6,0,10" />
+                            <ItemsControl ItemsSource="{Binding SelectedGroup.Photos}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <Border Width="72" Height="54" Background="{DynamicResource PlaceholderBrush}" Margin="0,0,8,0"><Image Source="{Binding ThumbnailUri}" Stretch="UniformToFill" /></Border>
+                                                    <StackPanel>
+                                                    <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Path}" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource MutedBrush}" />
+                                                    <TextBlock Text="{Binding SizeText}" Foreground="{DynamicResource MutedBrush}" />
+                                                    <TextBlock Text="{Binding OrganizationText}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="Manter esta" Command="{Binding DataContext.KeepPhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                                    <Button Content="Abrir pasta" Click="OpenFolder_Click" Margin="5,0,0,0" />
+                                                    <Button Content="Lixeira" Command="{Binding DataContext.RecyclePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Margin="5,0,0,0" />
+                                                    <Button Content="Mover" Command="{Binding DataContext.MovePhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Margin="5,0,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBox Text="{Binding DestinationFolder, UpdateSourceTrigger=PropertyChanged}" Width="280" ToolTip="Pasta de destino para Mover" />
+                                <Button Content="Escolher pasta" Click="ChooseFolder_Click" Margin="6,0,0,0" />
+                                <Button Content="Ignorar grupo" Command="{Binding IgnoreGroupCommand}" Margin="6,0,0,0" />
+                            </StackPanel>
+                            <CheckBox Content="Mesclar tags, coleções, nota e avaliação na cópia mantida antes de excluir" IsChecked="{Binding MergeOrganization}" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- ============ Parecidas e desfocadas ============ -->
+            <TabItem Header="Parecidas e desfocadas" DataContext="{Binding Pro}" Visibility="{Binding DataContext.HasPro, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <DockPanel Margin="0,14,0,0">
+                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                        <TextBlock Text="Imagens visualmente parecidas (mesma cena repetida, cópia reexportada, rajada) e fotos com pouca nitidez. Nada é apagado: a sugestão vira “escolhida/rejeitada”." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="Procurar parecidas" Command="{Binding FindSimilarCommand}" Style="{StaticResource AccentButton}" />
+                            <Button Content="Aplicar todas as sugestões…" Command="{Binding KeepAllBestCommand}" Margin="8,0,0,0" />
+                            <Button Content="Ver rejeitadas" Command="{Binding ShowRejectedCommand}" Margin="8,0,0,0" />
+                            <TextBlock Text="{Binding SimilarStatus}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="12,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding AnalysisCoverage}" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,6,0,0" />
+                        <Border Background="{DynamicResource WarningBackgroundBrush}" BorderBrush="{DynamicResource WarningBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,10,0,0">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Rejeitar todas…" Command="{Binding RejectBlurryCommand}" Margin="6,0,0,0" />
+                                <Button DockPanel.Dock="Right" Content="Ver na Biblioteca" Command="{Binding ShowBlurryCommand}" />
+                                <TextBlock Text="{Binding BlurryText}" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" />
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding SimilarGroups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource Card}" Padding="12" Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <DockPanel Margin="0,0,0,8">
+                                                <Button DockPanel.Dock="Right" Content="Manter a sugestão" Style="{StaticResource AccentButton}" Command="{Binding DataContext.KeepBestCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                                                    <TextBlock Text="{Binding BestText}" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                            <ItemsControl ItemsSource="{Binding Photos}">
+                                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Width="180" Margin="0,0,10,6" CornerRadius="6" BorderThickness="3" Padding="2">
+                                                            <Border.Style><Style TargetType="Border"><Setter Property="BorderBrush" Value="Transparent" /><Style.Triggers><DataTrigger Binding="{Binding IsBest}" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                                                            <StackPanel>
+                                                                <Border Height="120" Background="{DynamicResource PlaceholderBrush}"><Image Source="{Binding Thumbnail}" Stretch="Uniform" /></Border>
+                                                                <TextBlock Text="{Binding FileName}" FontSize="12" Foreground="{DynamicResource HeadingBrush}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0" ToolTip="{Binding Folder}" />
+                                                                <TextBlock Text="{Binding Details}" FontSize="11" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </TabItem>
+
+            <!-- ============ Armazenamento ============ -->
+            <TabItem Header="Armazenamento" DataContext="{Binding Pro}" Visibility="{Binding DataContext.HasPro, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,12">
+                            <Button DockPanel.Dock="Right" Content="Atualizar" Command="{Binding RefreshStorageCommand}" />
+                            <TextBlock Text="{Binding StorageTitle}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                        </DockPanel>
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <ItemsControl ItemsSource="{Binding StorageLines}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,16,10">
+                                            <TextBlock Text="{Binding Label}" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+                                            <TextBlock Text="{Binding Value}" Foreground="{DynamicResource HeadingBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="12" /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="POR ANO" Style="{StaticResource SectionLabel}" Margin="0,0,0,8" />
+                                        <ItemsControl ItemsSource="{Binding ByYear}" ItemTemplate="{StaticResource BarTemplate}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="POR TIPO DE ARQUIVO" Style="{StaticResource SectionLabel}" Margin="0,0,0,8" />
+                                        <ItemsControl ItemsSource="{Binding ByType}" ItemTemplate="{StaticResource BarTemplate}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="PASTAS QUE MAIS OCUPAM" Style="{StaticResource SectionLabel}" Margin="0,0,0,8" />
+                                        <ItemsControl ItemsSource="{Binding ByFolder}" ItemTemplate="{StaticResource BarTemplate}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="VÍDEOS GRANDES (2 GB OU MAIS)" Style="{StaticResource SectionLabel}" Margin="0,0,0,8" />
+                                        <TextBlock Text="Nenhum." Foreground="{DynamicResource MutedBrush}">
+                                            <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding LargestVideos.Count}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                        </TextBlock>
+                                        <ItemsControl ItemsSource="{Binding LargestVideos}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel Margin="0,0,0,8">
+                                                        <Border DockPanel.Dock="Left" Width="64" Height="40" Background="{DynamicResource PlaceholderBrush}" Margin="0,0,8,0"><Image Source="{Binding Thumbnail}" Stretch="UniformToFill" /></Border>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding FileName}" Foreground="{DynamicResource HeadingBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Folder}" />
+                                                            <TextBlock Text="{Binding Details}" FontSize="11" Foreground="{DynamicResource MutedBrush}" />
+                                                        </StackPanel>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============ Backup ============ -->
+            <TabItem Header="Backup" DataContext="{Binding Pro}" Visibility="{Binding DataContext.HasPro, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <DockPanel Margin="0,14,0,0">
+                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                        <TextBlock Text="Confira se cada pasta tem cópia em outro disco: todo arquivo da origem precisa existir no backup com o mesmo caminho e tamanho. O que faltar pode ser copiado daqui." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="Adicionar backup…" Command="{Binding AddBackupCommand}" Style="{StaticResource AccentButton}" />
+                            <Button Content="Conferir todos" Command="{Binding VerifyAllCommand}" Margin="8,0,0,0" />
+                            <TextBlock Text="{Binding BackupStatus}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="12,0,0,0" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </StackPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Backups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,10">
+                                        <DockPanel>
+                                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                                <Button Content="Conferir" Command="{Binding DataContext.VerifyBackupCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                                <Button Content="Copiar o que falta…" Command="{Binding DataContext.CopyMissingCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Margin="6,0,0,0" />
+                                                <Button Style="{StaticResource IconButton}" Command="{Binding DataContext.RemoveBackupCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Margin="6,0,0,0" ToolTip="Deixar de conferir este backup">
+                                                    <TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="12" />
+                                                </Button>
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                        <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Text" Value="&#xE73E;" /><Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" /><Style.Triggers><DataTrigger Binding="{Binding HasProblems}" Value="True"><Setter Property="Text" Value="&#xE7BA;" /><Setter Property="Foreground" Value="#D97706" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding Source}" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                                                    <TextBlock Text="  →  " Foreground="{DynamicResource MutedBrush}" />
+                                                    <TextBlock Text="{Binding Destination}" Foreground="{DynamicResource HeadingBrush}" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource TextBrush}" Margin="22,4,0,0" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding ProgressText}" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="22,2,0,0" />
+                                                <TextBlock Text="{Binding MissingPreview}" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="22,4,0,0" TextWrapping="Wrap" FontFamily="Consolas" />
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</UserControl>

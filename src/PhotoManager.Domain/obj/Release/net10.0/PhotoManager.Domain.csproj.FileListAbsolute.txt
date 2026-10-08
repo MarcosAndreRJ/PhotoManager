@@ -1,0 +1,11 @@
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\bin\Release\net10.0\PhotoManager.Domain.deps.json
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\bin\Release\net10.0\PhotoManager.Domain.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\bin\Release\net10.0\PhotoManager.Domain.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Release\net10.0\PhotoManager.Domain.GeneratedMSBuildEditorConfig.editorconfig
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Release\net10.0\PhotoManager.Domain.AssemblyInfoInputs.cache
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Release\net10.0\PhotoManager.Domain.AssemblyInfo.cs
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Release\net10.0\PhotoManager.Domain.csproj.CoreCompileInputs.cache
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Release\net10.0\PhotoManager.Domain.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Release\net10.0\refint\PhotoManager.Domain.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Release\net10.0\PhotoManager.Domain.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Release\net10.0\ref\PhotoManager.Domain.dll

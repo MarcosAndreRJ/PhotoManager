@@ -1,0 +1,17 @@
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\bin\Release\net10.0-windows\PhotoManager.Infrastructure.deps.json
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\bin\Release\net10.0-windows\PhotoManager.Infrastructure.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\bin\Release\net10.0-windows\PhotoManager.Infrastructure.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\bin\Release\net10.0-windows\PhotoManager.Application.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\bin\Release\net10.0-windows\PhotoManager.Domain.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\bin\Release\net10.0-windows\PhotoManager.Application.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\bin\Release\net10.0-windows\PhotoManager.Domain.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\PhotoManager.Infrastructure.csproj.AssemblyReference.cache
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\PhotoManager.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\PhotoManager.Infrastructure.AssemblyInfoInputs.cache
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\PhotoManager.Infrastructure.AssemblyInfo.cs
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\PhotoManager.Infrastructure.csproj.CoreCompileInputs.cache
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\PhotoMan.F12AB425.Up2Date
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\PhotoManager.Infrastructure.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\refint\PhotoManager.Infrastructure.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\PhotoManager.Infrastructure.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Infrastructure\obj\Release\net10.0-windows\ref\PhotoManager.Infrastructure.dll

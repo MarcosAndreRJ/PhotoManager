@@ -1,0 +1,42 @@
+<Window x:Class="PhotoManager.Wpf.Views.ExportDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:PhotoManager.Wpf.Views"
+        Title="Exportar" Width="560" SizeToContent="Height" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
+        Background="{DynamicResource WindowBackground}">
+    <StackPanel Margin="20">
+        <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" TextWrapping="Wrap" />
+        <TextBlock Text="Predefinição" Style="{StaticResource FieldLabel}" />
+        <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding Preset}" DisplayMemberPath="Name" />
+        <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,4,0,0" />
+        <Grid Margin="0,8,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="10" /><ColumnDefinition /><ColumnDefinition Width="10" /><ColumnDefinition /></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="Lado maior (px, vazio = original)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding LongEdgeText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+            <StackPanel Grid.Column="2"><TextBlock Text="Formato" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{x:Static views:ExportDialogViewModel.Formats}" SelectedItem="{Binding Format}" /></StackPanel>
+            <StackPanel Grid.Column="4"><TextBlock Text="Qualidade JPEG" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding Quality, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+        </Grid>
+        <Grid Margin="0,4,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="2*" /><ColumnDefinition Width="10" /><ColumnDefinition /></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="Marca d'água (texto; vazio = sem)" Style="{StaticResource FieldLabel}" /><TextBox Text="{Binding WatermarkText, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+            <StackPanel Grid.Column="2"><TextBlock Text="Posição" Style="{StaticResource FieldLabel}" /><ComboBox ItemsSource="{x:Static views:ExportDialogViewModel.Positions}" SelectedItem="{Binding WatermarkPosition}" /></StackPanel>
+        </Grid>
+        <TextBlock Text="Nome dos arquivos" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding NameTemplate, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Text="{Binding NameHelp}" Foreground="{DynamicResource MutedBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+        <CheckBox Content="Incluir vídeos (copiados sem conversão)" IsChecked="{Binding IncludeVideos}" Margin="0,10,0,0" />
+        <TextBlock Text="Destino" Style="{StaticResource FieldLabel}" />
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Content="Escolher…" Command="{Binding ChooseFolderCommand}" Padding="10,4" Margin="8,0,0,0" />
+            <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}" />
+        </DockPanel>
+        <DockPanel Margin="0,12,0,0">
+            <CheckBox DockPanel.Dock="Left" Content="Salvar estes ajustes como predefinição" IsChecked="{Binding SaveAsPreset}" VerticalAlignment="Center" ToolTip="Usa o nome da predefinição; mude o nome acima para criar uma nova" />
+        </DockPanel>
+        <TextBlock Text="Nome da predefinição" Style="{StaticResource FieldLabel}" Visibility="{Binding SaveAsPreset, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <TextBox Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding SaveAsPreset, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <DockPanel LastChildFill="False" Margin="0,16,0,0">
+            <Button Content="Cancelar" IsCancel="True" DockPanel.Dock="Right" Width="100" Margin="10,0,0,0" />
+            <Button Content="Exportar" Style="{StaticResource AccentButton}" IsDefault="True" IsEnabled="{Binding CanExport}" DockPanel.Dock="Right" Width="110" Click="Export_Click" />
+        </DockPanel>
+    </StackPanel>
+</Window>

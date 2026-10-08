@@ -1,0 +1,116 @@
+<UserControl x:Class="PhotoManager.Wpf.Views.SettingsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32" MaxWidth="900" HorizontalAlignment="Left">
+            <TextBlock Text="Configurações" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="Preferências guardadas neste computador." Style="{StaticResource PageSubtitle}" Margin="0,6,0,20" />
+
+            <!-- Aparência -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Aparência" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                    <TextBlock Text="O tema escuro deixa as fotos em destaque e cansa menos em longas sessões de triagem." Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,2,0,10" />
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Content="Claro" GroupName="theme" IsChecked="{Binding IsLight}" Margin="0,0,20,0" />
+                        <RadioButton Content="Escuro" GroupName="theme" IsChecked="{Binding IsDark}" Margin="0,0,20,0" />
+                        <RadioButton Content="Igual ao Windows" GroupName="theme" IsChecked="{Binding IsSystem}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Biblioteca -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,16" IsEnabled="{Binding HasPro}">
+                <StackPanel>
+                    <TextBlock Text="Biblioteca" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                    <DockPanel Margin="0,10,0,6">
+                        <TextBlock Text="Ordenação" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Width="160" />
+                        <ComboBox ItemsSource="{Binding SortChoices}" SelectedItem="{Binding DefaultSort}" Width="220" HorizontalAlignment="Left" />
+                    </DockPanel>
+                    <CheckBox Content="Grade justificada (cada foto na proporção real; retratos não desperdiçam espaço)" IsChecked="{Binding JustifiedGrid}" Margin="0,6" />
+                    <CheckBox Content="Agrupar por dia (com ordenação por data)" IsChecked="{Binding GroupByDay}" Margin="0,6" />
+                    <CheckBox Content="Empilhar RAW+JPEG e rajadas (mostra só a melhor de cada pilha)" IsChecked="{Binding StackPhotos}" Margin="0,6" />
+                    <CheckBox Content="Mostrar o nome do arquivo (desligado: data e hora, como “27 set · 05:59”)" IsChecked="{Binding ShowFileNames}" Margin="0,6" />
+                    <CheckBox Content="Prévia de vídeo ao passar o mouse (mover na horizontal percorre o vídeo)" IsChecked="{Binding HoverPreview}" Margin="0,6" />
+                    <CheckBox Content="Triagem: avançar para o próximo item depois de P/X/U" IsChecked="{Binding AutoAdvance}" Margin="0,6" />
+                    <CheckBox Content="Permitir o mapa online (imagens do OpenStreetMap, guardadas em cache)" IsChecked="{Binding MapAllowed}" Margin="0,6" />
+                </StackPanel>
+            </Border>
+
+            <!-- Exportação -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,16" IsEnabled="{Binding HasPro}">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Restaurar padrões" Command="{Binding RestorePresetsCommand}" Padding="10,4" />
+                        <TextBlock Text="Predefinições de exportação" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                    </DockPanel>
+                    <TextBlock Text="Crie novas no diálogo “Exportar” da Biblioteca (marque “Salvar estes ajustes como predefinição”)." Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,2,0,10" />
+                    <ItemsControl ItemsSource="{Binding Presets}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource WindowBackground}" CornerRadius="6" Padding="10,6" Margin="0,0,0,6">
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Command="{Binding DataContext.RemovePresetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" ToolTip="Remover predefinição">
+                                            <TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="11" />
+                                        </Button>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                                            <TextBlock Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- IA local -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,16" IsEnabled="{Binding HasPro}">
+                <StackPanel>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Abrir pasta dos modelos" Command="{Binding OpenModelsFolderCommand}" Padding="10,4" />
+                        <TextBlock Text="IA local" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                    </DockPanel>
+                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,2,0,12"
+                               Text="Tudo roda neste computador: nenhuma foto ou vídeo é enviado. Os modelos só são baixados quando você clica em “Baixar”. A indexação acontece em segundo plano e aparece na barra de status da Biblioteca." />
+                    <ItemsControl ItemsSource="{Binding Capabilities}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,8">
+                                    <StackPanel>
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding TotalSize}" Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center" />
+                                            <CheckBox Content="{Binding Title}" IsChecked="{Binding IsEnabled}" FontWeight="SemiBold" />
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding EngineText}" FontSize="12" Margin="22,2,0,6" TextWrapping="Wrap">
+                                            <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="#B45309" /><Style.Triggers><DataTrigger Binding="{Binding HasEngine}" Value="True"><Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                        </TextBlock>
+                                        <ItemsControl ItemsSource="{Binding Models}" Margin="22,0,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel Margin="0,3">
+                                                        <Button DockPanel.Dock="Right" Content="Remover" Command="{Binding DataContext.RemoveModelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Padding="8,2" Margin="6,0,0,0"
+                                                                Visibility="{Binding IsInstalled, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                        <Button DockPanel.Dock="Right" Content="Baixar" Command="{Binding DataContext.DownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Padding="8,2" Margin="6,0,0,0"
+                                                                ToolTipService.ShowOnDisabled="True" ToolTip="Disponível quando o motor de IA estiver instalado" />
+                                                        <TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center" Margin="8,0" />
+                                                        <TextBlock DockPanel.Dock="Right" Text="{Binding SizeText}" Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center" />
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextBrush}" />
+                                                            <TextBlock Text="{Binding Description}" Foreground="{DynamicResource MutedBrush}" FontSize="11" TextWrapping="Wrap" />
+                                                            <TextBlock Text="{Binding Error}" Foreground="{DynamicResource FavoriteBrush}" FontSize="11" />
+                                                        </StackPanel>
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding ModelsFolder, StringFormat=Pasta dos modelos: {0}}" Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

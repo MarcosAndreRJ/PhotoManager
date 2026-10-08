@@ -1,0 +1,15 @@
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\bin\Release\net10.0-windows\PhotoManager.Application.deps.json
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\bin\Release\net10.0-windows\PhotoManager.Application.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\bin\Release\net10.0-windows\PhotoManager.Application.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\bin\Release\net10.0-windows\PhotoManager.Domain.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\bin\Release\net10.0-windows\PhotoManager.Domain.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\PhotoManager.Application.csproj.AssemblyReference.cache
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\PhotoManager.Application.GeneratedMSBuildEditorConfig.editorconfig
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\PhotoManager.Application.AssemblyInfoInputs.cache
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\PhotoManager.Application.AssemblyInfo.cs
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\PhotoManager.Application.csproj.CoreCompileInputs.cache
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\PhotoMan.A113AB42.Up2Date
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\PhotoManager.Application.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\refint\PhotoManager.Application.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\PhotoManager.Application.pdb
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Application\obj\Release\net10.0-windows\ref\PhotoManager.Application.dll

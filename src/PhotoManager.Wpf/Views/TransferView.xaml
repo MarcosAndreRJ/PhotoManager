@@ -1,0 +1,175 @@
+<UserControl x:Class="PhotoManager.Wpf.Views.TransferView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:PhotoManager.Wpf.Views"
+             Loaded="View_Loaded" Unloaded="View_Unloaded">
+    <UserControl.Resources>
+        <!-- Botão de local (disco, pasta fixada, recente): também aceita arquivos soltos -->
+        <Style x:Key="PlaceButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="AllowDrop" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}"><ContentPresenter /></Border>
+                        <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBrush}" /></Trigger></ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="PlaceTemplate" DataType="{x:Type views:TransferPlace}">
+            <Button Style="{StaticResource PlaceButton}" Command="{Binding DataContext.OpenPlaceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                    ToolTip="{Binding Path}" DragOver="Place_DragOver" Drop="Place_Drop">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <StackPanel>
+                        <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}" />
+                        <TextBlock Text="{Binding Detail}" FontSize="10" Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis">
+                            <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed" /></Trigger></Style.Triggers></Style></TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </DockPanel>
+            </Button>
+        </DataTemplate>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" /><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="Foreground" Value="{DynamicResource MutedBrush}" /><Setter Property="Margin" Value="8,12,0,4" />
+        </Style>
+        <!-- Botão de ação central (ícone + legenda curta) -->
+        <Style x:Key="CenterButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Width" Value="62" /><Setter Property="Padding" Value="2,6" /><Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+
+        <!-- Cabeçalho -->
+        <DockPanel Margin="0,0,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding CompareSummary}" Foreground="{DynamicResource MutedBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <CheckBox Content="Só diferenças" IsChecked="{Binding ShowOnlyDifferences}" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="12"
+                          Visibility="{Binding IsComparing, Converter={StaticResource BooleanToVisibilityConverter}}" ToolTip="Esconde o que é igual nos dois lados" />
+                <ToggleButton x:Name="CompareButton" IsChecked="{Binding IsComparing}" Padding="10,5" Margin="0,0,6,0" ToolTip="Marca o que existe só de um lado, o que é igual e o que difere (nome, tamanho e data). Não sincroniza nada.">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Comparar" /></StackPanel>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding ShowPlaces}" Padding="10,5" ToolTip="Mostrar/ocultar a barra de Locais">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8A0;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Locais" /></StackPanel>
+                </ToggleButton>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Transferência" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource HeadingBrush}" />
+                <TextBlock Text="Organize qualquer pasta, disco ou rede: arraste entre os painéis (Shift = mover), Ctrl+C/X/V, F2 renomeia, 1–6 marca cor, Ctrl+Z desfaz. O catálogo acompanha as mudanças."
+                           Foreground="{DynamicResource MutedBrush}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap" />
+            </StackPanel>
+        </DockPanel>
+
+        <Grid Grid.Row="1" x:Name="PanesGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="LeftColumn" Width="*" MinWidth="320" />
+                <ColumnDefinition Width="76" />
+                <ColumnDefinition x:Name="RightColumn" Width="*" MinWidth="320" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Locais: discos, pastas do Windows, fixadas e recentes (abrem no painel ativo; também recebem arquivos soltos) -->
+            <Border x:Name="PlacesBar" Width="210" Margin="0,0,10,0" Style="{StaticResource Card}" Padding="6" Visibility="{Binding ShowPlaces, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Command="{Binding RefreshLocationsCommand}" ToolTip="Atualizar discos (pendrive/cartão recém-conectado)" Margin="0,8,0,0"><TextBlock Text="&#xE72C;" FontFamily="{StaticResource IconFont}" FontSize="11" /></Button>
+                            <TextBlock Text="LOCAIS" Style="{StaticResource SectionTitle}" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding Locations}" ItemTemplate="{StaticResource PlaceTemplate}" />
+                        <TextBlock Text="FIXADAS" Style="{StaticResource SectionTitle}" />
+                        <ItemsControl x:Name="PinnedList" ItemsSource="{Binding Pinned}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource PlaceTemplate}" />
+                                        <Button Style="{StaticResource IconButton}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,2,0" ToolTip="Desafixar"
+                                                Command="{Binding DataContext.UnpinCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                            <TextBlock Text="&#xE711;" FontFamily="{StaticResource IconFont}" FontSize="9" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="Use o alfinete no painel para fixar a pasta aberta." Foreground="{DynamicResource MutedBrush}" FontSize="11" TextWrapping="Wrap" Margin="8,0,4,0">
+                            <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding Pinned.Count}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers><Setter Property="Visibility" Value="Collapsed" /></Style></TextBlock.Style>
+                        </TextBlock>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Limpar" Command="{Binding ClearRecentCommand}" FontSize="11" Padding="6,1" Margin="0,8,2,0" Background="Transparent" BorderThickness="0" />
+                            <TextBlock Text="RECENTES" Style="{StaticResource SectionTitle}" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding Recent}" ItemTemplate="{StaticResource PlaceTemplate}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <views:TransferPaneView x:Name="LeftPaneView" Grid.Column="1" DataContext="{Binding LeftPane}" />
+
+            <!-- Divisor arrastável + ações entre os painéis -->
+            <GridSplitter x:Name="Splitter" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" Background="Transparent" ShowsPreview="False" Cursor="SizeWE"
+                          ToolTip="Arraste para redimensionar os painéis" DragCompleted="Splitter_DragCompleted" />
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Button x:Name="CopyRightButton" Style="{StaticResource CenterButton}" Command="{Binding CopyToRightCommand}" ToolTip="Copiar a seleção da esquerda para a pasta da direita">
+                    <StackPanel><TextBlock Text="&#xE72A;" FontFamily="{StaticResource IconFont}" HorizontalAlignment="Center" /><TextBlock Text="Copiar" FontSize="10" HorizontalAlignment="Center" /></StackPanel>
+                </Button>
+                <Button x:Name="MoveRightButton" Style="{StaticResource CenterButton}" Command="{Binding MoveToRightCommand}" ToolTip="Mover a seleção da esquerda para a pasta da direita">
+                    <StackPanel><TextBlock Text="&#xEBE7;" FontFamily="{StaticResource IconFont}" HorizontalAlignment="Center" /><TextBlock Text="Mover" FontSize="10" HorizontalAlignment="Center" /></StackPanel>
+                </Button>
+                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="6,4,6,10" />
+                <Button x:Name="CopyLeftButton" Style="{StaticResource CenterButton}" Command="{Binding CopyToLeftCommand}" ToolTip="Copiar a seleção da direita para a pasta da esquerda">
+                    <StackPanel><TextBlock Text="&#xE72B;" FontFamily="{StaticResource IconFont}" HorizontalAlignment="Center" /><TextBlock Text="Copiar" FontSize="10" HorizontalAlignment="Center" /></StackPanel>
+                </Button>
+                <Button x:Name="MoveLeftButton" Style="{StaticResource CenterButton}" Command="{Binding MoveToLeftCommand}" ToolTip="Mover a seleção da direita para a pasta da esquerda">
+                    <StackPanel><TextBlock Text="&#xEBE7;" FontFamily="{StaticResource IconFont}" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5"><TextBlock.RenderTransform><ScaleTransform ScaleX="-1" /></TextBlock.RenderTransform></TextBlock><TextBlock Text="Mover" FontSize="10" HorizontalAlignment="Center" /></StackPanel>
+                </Button>
+                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="6,4,6,10" />
+                <Button x:Name="SwapButton" Style="{StaticResource CenterButton}" Command="{Binding SwapPanesCommand}" ToolTip="Trocar as pastas dos painéis">
+                    <StackPanel><TextBlock Text="&#xE8AB;" FontFamily="{StaticResource IconFont}" HorizontalAlignment="Center" /><TextBlock Text="Trocar" FontSize="10" HorizontalAlignment="Center" /></StackPanel>
+                </Button>
+                <Button x:Name="UndoButton" Style="{StaticResource CenterButton}" Command="{Binding UndoCommand}" ToolTip="{Binding UndoToolTip}" ToolTipService.ShowOnDisabled="True">
+                    <StackPanel><TextBlock Text="&#xE7A7;" FontFamily="{StaticResource IconFont}" HorizontalAlignment="Center" /><TextBlock Text="Desfazer" FontSize="10" HorizontalAlignment="Center" /></StackPanel>
+                </Button>
+            </StackPanel>
+
+            <views:TransferPaneView x:Name="RightPaneView" Grid.Column="3" DataContext="{Binding RightPane}" />
+        </Grid>
+
+        <!-- Progresso da transferência (com cancelar) ou resumo da última operação (com desfazer) -->
+        <Border Grid.Row="2" Margin="0,10,0,0" Padding="12,8">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsTransferring}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                        <DataTrigger Binding="{Binding HasTransferMessage}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid>
+                <DockPanel Visibility="{Binding IsTransferring, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Button DockPanel.Dock="Right" Content="Cancelar" Command="{Binding CancelTransferCommand}" Padding="12,4" Margin="10,0,0,0" />
+                    <StackPanel>
+                        <TextBlock Text="{Binding ProgressText}" Foreground="{DynamicResource TextBrush}" FontSize="12" TextTrimming="CharacterEllipsis" Margin="0,0,0,4" />
+                        <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" Height="6" />
+                    </StackPanel>
+                </DockPanel>
+                <DockPanel>
+                    <DockPanel.Style>
+                        <Style TargetType="DockPanel"><Setter Property="Visibility" Value="Visible" /><Style.Triggers><DataTrigger Binding="{Binding IsTransferring}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style>
+                    </DockPanel.Style>
+                    <Button DockPanel.Dock="Right" Command="{Binding UndoCommand}" ToolTip="{Binding UndoToolTip}" Padding="10,3">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE7A7;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Desfazer" /></StackPanel>
+                    </Button>
+                    <TextBlock Text="{Binding TransferMessage}" Foreground="{DynamicResource HeadingBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                </DockPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
