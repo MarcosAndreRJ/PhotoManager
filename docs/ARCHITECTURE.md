@@ -135,3 +135,27 @@ ICollectionRepository (Persistence) ──▶ SqliteCatalogRepository (SQLite)
 - **Drag-and-Drop de Fotos (Etapa D):** Decisão completamente desacoplada da UI via `DropPlanner`. Suporte à seleção múltipla por IDs (`PhotoIdsDragData`), sem expor objetos WPF ou travar virtualização. Arraste padrão adiciona; Shift arrasta para mover (removendo apenas da coleção de origem ativa na sidebar e saindo do filtro atual sem desmarcar seleção). Origens ambíguas disparam menu `AskMenu` calculando a interseção de coleções comuns.
 - **Drag-and-Drop de Coleções e Prevenção de Ciclos (Etapa E):** Função pura `CollectionDropPlanner` calcula a viabilidade da operação durante o `DragOver` em memória sem I/O síncrono. Mover subcoleção sobre o cabeçalho "COLEÇÕES" reparenta para a raiz (`ParentCollectionId = null`). Bloqueios estritos com motivo explícito no popup: tentativa de mover para si mesma, para qualquer de seus descendentes (ciclos A→A, A↔B, A→...→A), estouro de 8 níveis de profundidade (somando as alturas), e conflito de nome entre irmãos no nível de destino (`COLLATE NOCASE`). Defesa dupla no serviço (`CollectionService.MoveAsync`) garante integridade transacional mesmo contra chamadas externas.
 
+## Módulo Transferência (Dois Painéis e Organização de Arquivos)
+
+```text
+Wpf/Views/TransferView (Layout Principal com GridSplitter e Barra de Locais/Fixadas)
+       ├─ TransferPaneView (Painel Esquerdo)  ──▶ TransferPaneViewModel (Instância Independente)
+       └─ TransferPaneView (Painel Direito)   ──▶ TransferPaneViewModel (Instância Independente)
+                                                        │
+       ┌────────────────────────────────────────────────┴───────────────────────────────┐
+       ▼                                                                                ▼
+Application/Transfer                                                             Infrastructure
+  FolderLister (Enumeração segura EnumerateFileSystemInfos)                       ThumbnailService (IFileThumbnailService)
+  FolderEmptyChecker (Verificação leve de pastas vazias com MoveNext O(1))          └─ Cache por hash caminho+tamanho+data
+  TransferListing (Filtro por nome/extensão + ordenação natural)                  TransferOrganizer (ITransferOrganizer)
+  NavigationHistory (Voltar / Avançar / Subir)                                      ├─ TransferAsync / MovePathsAsync
+  Breadcrumbs (Caminhos clicáveis, suporte UNC)                                    ├─ Integração bidirecional com Catálogo
+  FolderComparer (Comparação lado a lado nome/tamanho/data)                        └─ Operações com Lixeira e .pmpart
+```
+
+- **Isolamento de Painéis:** Cada lado (`LeftPane` e `RightPane`) é uma instância 100% isolada de `TransferPaneViewModel`, mantendo seu próprio histórico, filtros, busca, ordenação e estado de seleção.
+- **Detecção Leve de Pastas Vazias:** `FolderEmptyChecker.IsEmpty` faz uma enumeração com `MoveNext()` que interrompe no primeiro item sem alocar listas. O resultado é processado em segundo plano de forma assíncrona com cancelamento e cache na ViewModel.
+- **Camada Visual:** `TransferCardContainer` em `TransferPaneView.xaml` aplica estilos suaves (`TransferEmptyFolder*`) para pastas vazias na grade e na lista, preservando destaque de seleção e prioridade visual.
+- **Sincronização com o Catálogo:** `ITransferOrganizer` garante que operações de renomear e mover atualizem o `CurrentPath` das fotos catalogadas, mantendo histórico, tags e metadados íntegros.
+
+

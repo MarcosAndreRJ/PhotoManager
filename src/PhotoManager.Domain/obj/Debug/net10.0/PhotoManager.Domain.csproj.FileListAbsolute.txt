@@ -9,3 +9,4 @@ K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Debug\net10.0\Phot
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Debug\net10.0\refint\PhotoManager.Domain.dll
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Debug\net10.0\PhotoManager.Domain.pdb
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Debug\net10.0\ref\PhotoManager.Domain.dll
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Domain\obj\Debug\net10.0\PhotoManager.Domain.sourcelink.json

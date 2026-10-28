@@ -97,3 +97,15 @@ K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windo
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\TransferView.g.cs
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\TransferPaneView.baml
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\TransferView.baml
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Themes\ColorsDark.baml
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\BatchRenameDialog.baml
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\ConflictDialog.baml
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\OrganizeByDateDialog.baml
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\BatchRenameDialog.g.cs
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\CompareWindow.g.cs
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\ConflictDialog.g.cs
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\ExportDialog.g.cs
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\OrganizeByDateDialog.g.cs
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\CompareWindow.baml
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\Views\ExportDialog.baml
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Release\net10.0-windows\PhotoManager.Wpf.sourcelink.json

@@ -23,6 +23,7 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
     private CancellationTokenSource? _transferCts;
     private TransferPaneViewModel _activePane;
     private bool _isTransferring, _isComparing, _onlyDifferences, _showPlaces = true, _restoring;
+    private bool _isSynchronizedNavigation, _isSyncingNavigation;
     private double _progress, _leftRatio = 0.5;
     private string _progressText = string.Empty, _transferMessage = string.Empty;
     private int _saveVersion;
@@ -61,6 +62,7 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
         UnpinCommand = new RelayCommand(parameter => { if (parameter is TransferPlace place) Unpin(place.Path); });
         ClearRecentCommand = new RelayCommand(_ => { Recent.Clear(); ScheduleSave(); }, _ => Recent.Count > 0);
         RefreshLocationsCommand = new RelayCommand(_ => LoadLocations());
+        ToggleSynchronizedNavigationCommand = new RelayCommand(_ => IsSynchronizedNavigation = !IsSynchronizedNavigation);
         LoadLocations();
 
         var layout = _settings?.Load() ?? TransferLayout.Default;
@@ -68,7 +70,10 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
         LeftPane.ApplyLayout(layout.Left);
         RightPane.ApplyLayout(layout.Right);
         _leftRatio = Math.Clamp(layout.LeftRatio, 0.15, 0.85);
-        _showPlaces = layout.ShowPlaces;
+        _showPlaces = true;
+        OnPropertyChanged(nameof(ShowPlaces));
+        _isSynchronizedNavigation = layout.IsSynchronizedNavigation;
+        OnPropertyChanged(nameof(IsSynchronizedNavigation));
         foreach (var path in layout.Pinned ?? []) Pinned.Add(PlaceFor(path, ""));
         foreach (var path in layout.Recent ?? []) Recent.Add(PlaceFor(path, ""));
         _restoring = false;
@@ -94,6 +99,7 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
     public RelayCommand UnpinCommand { get; }
     public RelayCommand ClearRecentCommand { get; }
     public RelayCommand RefreshLocationsCommand { get; }
+    public RelayCommand ToggleSynchronizedNavigationCommand { get; }
 
     /// <summary>Painel com o foco: os Locais abrem nele.</summary>
     public TransferPaneViewModel ActivePane
@@ -129,6 +135,19 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
         set { if (_onlyDifferences == value) return; _onlyDifferences = value; OnPropertyChanged(); LeftPane.ShowOnlyDifferences = value; RightPane.ShowOnlyDifferences = value; }
     }
     public string CompareSummary { get; private set; } = string.Empty;
+
+    // ---------- sincronização de navegação ----------
+    public bool IsSynchronizedNavigation
+    {
+        get => _isSynchronizedNavigation;
+        set
+        {
+            if (_isSynchronizedNavigation == value) return;
+            _isSynchronizedNavigation = value;
+            OnPropertyChanged();
+            ScheduleSave();
+        }
+    }
 
     // ---------- locais e layout ----------
     public IReadOnlyList<TransferPlace> Locations { get; private set; } = [];
@@ -212,6 +231,7 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
     private void OnPaneNavigated(TransferPaneViewModel pane, string path)
     {
         lock (_navigationLock) OnPaneNavigatedCore(pane, path);
+        _ = SyncNavigationAsync(pane, path);
     }
 
     private void OnPaneNavigatedCore(TransferPaneViewModel pane, string path)
@@ -226,6 +246,77 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
         pane.IsPinned = IsPinned(path);
         Recompare();
         ScheduleSave();
+    }
+
+    public async Task SyncNavigationAsync(TransferPaneViewModel sourcePane, string newPath)
+    {
+        if (!_isSynchronizedNavigation || _isSyncingNavigation || _restoring) return;
+        var other = sourcePane == LeftPane ? RightPane : LeftPane;
+        if (!other.HasFolder || string.IsNullOrWhiteSpace(sourcePane.PreviousPath)) return;
+
+        var oldPath = sourcePane.PreviousPath;
+        if (SamePath(oldPath, newPath)) return;
+
+        _isSyncingNavigation = true;
+        try
+        {
+            var oldTrimmed = oldPath.TrimEnd('\\');
+            var newTrimmed = newPath.TrimEnd('\\');
+            var newParent = Path.GetDirectoryName(newTrimmed);
+
+            // Caso 1: Entrou em uma subpasta direta (ex: old = C:\Fotos, new = C:\Fotos\2024)
+            if (string.Equals(newParent, oldTrimmed, StringComparison.OrdinalIgnoreCase))
+            {
+                var subfolderName = Path.GetFileName(newTrimmed);
+                var targetCandidate = Path.Combine(other.CurrentPath, subfolderName);
+                if (SamePath(other.CurrentPath, targetCandidate)) return;
+
+                if (Directory.Exists(targetCandidate) || (!Directory.Exists(newPath) && !Directory.Exists(other.CurrentPath)))
+                {
+                    await other.NavigateAsync(targetCandidate);
+                }
+                else
+                {
+                    TransferMessage = $"Subpasta “{subfolderName}” não encontrada no painel {(other == LeftPane ? "esquerdo" : "direito")}.";
+                }
+                return;
+            }
+
+            // Caso 2: Subiu para a pasta pai (ex: old = C:\Fotos\2024, new = C:\Fotos)
+            var oldParent = Path.GetDirectoryName(oldTrimmed);
+            if (string.Equals(oldParent, newTrimmed, StringComparison.OrdinalIgnoreCase))
+            {
+                if (other.ParentPath is { } targetParent)
+                {
+                    if (!SamePath(other.CurrentPath, targetParent))
+                    {
+                        await other.NavigateAsync(targetParent);
+                    }
+                }
+                return;
+            }
+
+            // Caso 3: Navegação relativa (ex: sub-subpasta ou salto para baixo)
+            try
+            {
+                var rel = Path.GetRelativePath(oldPath, newPath);
+                if (!Path.IsPathRooted(rel) && !rel.StartsWith("..", StringComparison.Ordinal))
+                {
+                    var targetCandidate = Path.Combine(other.CurrentPath, rel);
+                    if (SamePath(other.CurrentPath, targetCandidate)) return;
+
+                    if (Directory.Exists(targetCandidate) || (!Directory.Exists(newPath) && !Directory.Exists(other.CurrentPath)))
+                    {
+                        await other.NavigateAsync(targetCandidate);
+                    }
+                }
+            }
+            catch (ArgumentException) { }
+        }
+        finally
+        {
+            _isSyncingNavigation = false;
+        }
     }
 
     // ---------- comparar ----------
@@ -420,6 +511,6 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
     public void SaveLayoutNow()
     {
         if (_settings is null || _restoring) return;
-        _settings.Save(new TransferLayout(LeftPane.GetLayout(), RightPane.GetLayout(), LeftRatio, ShowPlaces, Pinned.Select(p => p.Path).ToList(), Recent.Select(r => r.Path).ToList()));
+        _settings.Save(new TransferLayout(LeftPane.GetLayout(), RightPane.GetLayout(), LeftRatio, ShowPlaces, Pinned.Select(p => p.Path).ToList(), Recent.Select(r => r.Path).ToList(), IsSynchronizedNavigation));
     }
 }

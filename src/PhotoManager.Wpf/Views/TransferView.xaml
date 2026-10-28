@@ -56,6 +56,9 @@
                 <ToggleButton x:Name="CompareButton" IsChecked="{Binding IsComparing}" Padding="10,5" Margin="0,0,6,0" ToolTip="Marca o que existe só de um lado, o que é igual e o que difere (nome, tamanho e data). Não sincroniza nada.">
                     <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Comparar" /></StackPanel>
                 </ToggleButton>
+                <ToggleButton x:Name="SyncNavButton" IsChecked="{Binding IsSynchronizedNavigation}" Padding="10,5" Margin="0,0,6,0" ToolTip="Navegação Sincronizada: ao entrar numa subpasta ou subir de nível num painel, o outro painel acompanha a mesma navegação automaticamente.">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE895;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Navegação Sincronizada" /></StackPanel>
+                </ToggleButton>
                 <ToggleButton IsChecked="{Binding ShowPlaces}" Padding="10,5" ToolTip="Mostrar/ocultar a barra de Locais">
                     <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8A0;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Locais" /></StackPanel>
                 </ToggleButton>
@@ -76,7 +79,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Locais: discos, pastas do Windows, fixadas e recentes (abrem no painel ativo; também recebem arquivos soltos) -->
-            <Border x:Name="PlacesBar" Width="210" Margin="0,0,10,0" Style="{StaticResource Card}" Padding="6" Visibility="{Binding ShowPlaces, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border x:Name="PlacesBar" Grid.Column="0" Width="210" Margin="0,0,10,0" Style="{StaticResource Card}" Padding="6" Visibility="{Binding ShowPlaces, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <DockPanel>

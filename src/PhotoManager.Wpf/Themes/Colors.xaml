@@ -53,4 +53,13 @@
     <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />
     <SolidColorBrush x:Key="RejectBrush" Color="#DC2626" />
     <SolidColorBrush x:Key="ScrimBrush" Color="#99000000" />
+
+    <!-- Módulo Transferência: Pastas vazias (diferença visível, elegante e neutra) -->
+    <SolidColorBrush x:Key="TransferEmptyFolderBackgroundBrush" Color="#F1F3F6" />
+    <SolidColorBrush x:Key="TransferEmptyFolderBorderBrush" Color="#D4DCE8" />
+    <SolidColorBrush x:Key="TransferEmptyFolderPlaceholderBrush" Color="#E5EAF1" />
+    <SolidColorBrush x:Key="TransferEmptyFolderForegroundBrush" Color="#78869A" />
+    <SolidColorBrush x:Key="TransferEmptyFolderIconBrush" Color="#8896A8" />
+    <SolidColorBrush x:Key="TransferEmptyFolderListRowBrush" Color="#F1F3F6" />
+    <SolidColorBrush x:Key="TransferEmptyFolderSelectedBackground" Color="#E8EDF5" />
 </ResourceDictionary>

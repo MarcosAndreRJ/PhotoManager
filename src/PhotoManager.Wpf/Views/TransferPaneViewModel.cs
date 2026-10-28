@@ -27,7 +27,7 @@ public sealed class TransferItemViewModel(TransferEntry entry) : ViewModelBase
 {
     private Uri? _thumbnailUri;
     private PhotoColor _color;
-    private bool _isCataloged, _isEditing;
+    private bool _isCataloged, _isEditing, _isEmptyFolder;
     private string _editText = string.Empty;
     private CompareState _compare;
     private IReadOnlyList<string> _duplicates = [];
@@ -36,6 +36,7 @@ public sealed class TransferItemViewModel(TransferEntry entry) : ViewModelBase
     public string Path => Entry.Path;
     public string Name => Entry.Name;
     public bool IsFolder => Entry.IsFolder;
+    public bool IsEmptyFolder { get => _isEmptyFolder; set { if (_isEmptyFolder == value) return; _isEmptyFolder = value; OnPropertyChanged(); } }
     public bool IsVideo => Entry.Kind == TransferEntryKind.Video;
     public bool IsMedia => Entry.IsMedia;
     public bool ShowGlyph => ThumbnailUri is null;
@@ -113,6 +114,7 @@ public sealed class TransferPaneViewModel : ViewModelBase
     private readonly IFileThumbnailService? _thumbnails;
     private readonly Func<string?> _chooseFolder;
     private readonly Func<string, CancellationToken, FolderListResult> _lister;
+    private readonly Func<string, bool> _folderEmptyChecker;
     private readonly ITransferOrganizer? _organizer;
     private readonly ITransferDialogs _dialogs;
     private readonly NavigationHistory _history = new();
@@ -122,6 +124,7 @@ public sealed class TransferPaneViewModel : ViewModelBase
     private IReadOnlyList<TransferItemViewModel> _selected = [];
     private IReadOnlyDictionary<string, PhotoColor> _colors = new Dictionary<string, PhotoColor>();
     private IReadOnlyDictionary<string, PhotoColor> _folderColors = new Dictionary<string, PhotoColor>();
+    private IReadOnlyDictionary<string, bool> _emptyFolders = new Dictionary<string, bool>();
     private IReadOnlyDictionary<string, CompareState>? _compare;
     private IReadOnlyDictionary<string, IReadOnlyList<string>> _duplicates = new Dictionary<string, IReadOnlyList<string>>();
     private CancellationTokenSource? _loadCts, _detailsCts;
@@ -136,13 +139,14 @@ public sealed class TransferPaneViewModel : ViewModelBase
     private IReadOnlyList<DetailRow> _details = [];
 
     public TransferPaneViewModel(IFileThumbnailService? thumbnails = null, Func<string?>? chooseFolder = null, Func<string, CancellationToken, FolderListResult>? lister = null,
-        ITransferOrganizer? organizer = null, ITransferDialogs? dialogs = null)
+        ITransferOrganizer? organizer = null, ITransferDialogs? dialogs = null, Func<string, bool>? folderEmptyChecker = null)
     {
         _thumbnails = thumbnails;
         _chooseFolder = chooseFolder ?? PickFolder;
         _lister = lister ?? ((path, token) => FolderLister.List(path, token));
         _organizer = organizer;
         _dialogs = dialogs ?? new WpfTransferDialogs();
+        _folderEmptyChecker = folderEmptyChecker ?? FolderEmptyChecker.IsEmpty;
 
         BackCommand = new RelayCommand(_ => GoBack(), _ => _history.CanGoBack);
         ForwardCommand = new RelayCommand(_ => GoForward(), _ => _history.CanGoForward);
@@ -235,6 +239,7 @@ public sealed class TransferPaneViewModel : ViewModelBase
     public bool IsActive { get => _isActive; set { if (_isActive == value) return; _isActive = value; OnPropertyChanged(); } }
 
     public ObservableCollection<BreadcrumbPart> Breadcrumb { get; } = [];
+    public string? PreviousPath { get; private set; }
     public string CurrentPath { get => _currentPath; private set { _currentPath = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasFolder)); OnPropertyChanged(nameof(ParentPath)); } }
     public bool HasFolder => CurrentPath.Length > 0;
     public string? ParentPath => HasFolder ? NavigationHistory.Parent(CurrentPath) : null;
@@ -352,6 +357,7 @@ public sealed class TransferPaneViewModel : ViewModelBase
         var cts = _loadCts = new CancellationTokenSource();
         var token = cts.Token;
         path = NormalizePath(path);
+        var oldPath = CurrentPath;
         IsLoading = true;
         FolderListResult result;
         try { result = await Task.Run(() => _lister(path, token), token); }
@@ -369,10 +375,12 @@ public sealed class TransferPaneViewModel : ViewModelBase
         SetSelection([]);
         _known.Clear();
         _duplicates = new Dictionary<string, IReadOnlyList<string>>();
+        _emptyFolders = new Dictionary<string, bool>();
         _pendingNewFolder = null;
         CurrentPath = path;
         if (result.IsOk)
         {
+            PreviousPath = oldPath;
             if (record) _history.Visit(path);
             ErrorText = string.Empty;
             _entries = result.Entries;
@@ -391,6 +399,7 @@ public sealed class TransferPaneViewModel : ViewModelBase
         {
             Navigated?.Invoke(this, path);
             _ = FindDuplicatesAsync(token);
+            _ = CheckEmptyFoldersAsync(token);
         }
     }
 
@@ -443,7 +452,11 @@ public sealed class TransferPaneViewModel : ViewModelBase
     private TransferItemViewModel NewItem(TransferEntry entry)
     {
         var item = new TransferItemViewModel(entry);
-        if (entry.IsFolder) item.SetCatalogState(_folderColors.TryGetValue(entry.Path, out var folderColor) ? folderColor : null);
+        if (entry.IsFolder)
+        {
+            item.SetCatalogState(_folderColors.TryGetValue(entry.Path, out var folderColor) ? folderColor : null);
+            if (_emptyFolders.TryGetValue(entry.Path, out var isEmpty)) item.IsEmptyFolder = isEmpty;
+        }
         else item.SetCatalogState(_colors.TryGetValue(entry.Path, out var color) ? color : null);
         if (_compare is not null && _compare.TryGetValue(entry.Path, out var state)) item.CompareState = state;
         if (_duplicates.TryGetValue(entry.Path, out var others)) item.Duplicates = others;
@@ -516,6 +529,36 @@ public sealed class TransferPaneViewModel : ViewModelBase
         }
         catch (OperationCanceledException) { }
         catch (Exception) { /* duplicata é informação extra; falhar aqui não atrapalha a navegação */ }
+    }
+
+    /// <summary>Verificação rápida de pastas vazias em segundo plano: sem travar a interface e sem varredura recursiva.</summary>
+    private async Task CheckEmptyFoldersAsync(CancellationToken token)
+    {
+        var folders = _entries.Where(e => e.IsFolder).Select(e => e.Path).ToList();
+        if (folders.Count == 0) return;
+        try
+        {
+            var results = await Task.Run(() =>
+            {
+                var dict = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+                foreach (var folderPath in folders)
+                {
+                    if (token.IsCancellationRequested) break;
+                    dict[folderPath] = _folderEmptyChecker(folderPath);
+                }
+                return dict;
+            }, token);
+
+            if (token.IsCancellationRequested) return;
+            _emptyFolders = results;
+            foreach (var (folderPath, isEmpty) in results)
+            {
+                if (_known.TryGetValue(folderPath, out var item))
+                    item.IsEmptyFolder = isEmpty;
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception) { /* falhas de verificação não impedem a navegação */ }
     }
 
     private async Task LoadDetailsAsync()

@@ -94,24 +94,108 @@ public sealed class TransferUndoStack(int capacity = 30)
 
 public enum CompareState { None, OnlyHere, Same, Different }
 
-/// <summary>Compara duas listagens pelo NOME: arquivo igual = mesmo tamanho e data (tolerância de 2 s, FAT/exFAT); pasta = existe nos dois lados. Não sincroniza nada.</summary>
+/// <summary>Compara duas listagens pelo NOME: arquivo igual = mesmo tamanho e data (tolerância de 2 s, FAT/exFAT); pasta = compara o conteúdo e subpastas recursivamente. Não sincroniza nada.</summary>
 public static class FolderComparer
 {
-    public static (IReadOnlyDictionary<string, CompareState> Left, IReadOnlyDictionary<string, CompareState> Right) Compare(IReadOnlyList<TransferEntry> left, IReadOnlyList<TransferEntry> right)
+    public static (IReadOnlyDictionary<string, CompareState> Left, IReadOnlyDictionary<string, CompareState> Right) Compare(
+        IReadOnlyList<TransferEntry> left,
+        IReadOnlyList<TransferEntry> right,
+        Func<string, string, bool>? folderContentComparer = null)
     {
         var rightByName = right.GroupBy(e => e.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
         var leftByName = left.GroupBy(e => e.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
-        return (Mark(left, rightByName), Mark(right, leftByName));
+
+        var cache = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        var baseComparer = folderContentComparer ?? AreFolderContentsIdentical;
+        bool CachedComparer(string a, string b)
+        {
+            var key = string.Compare(a, b, StringComparison.OrdinalIgnoreCase) <= 0 ? $"{a}:::{b}" : $"{b}:::{a}";
+            if (cache.TryGetValue(key, out var cached)) return cached;
+            var result = baseComparer(a, b);
+            cache[key] = result;
+            return result;
+        }
+
+        return (Mark(left, rightByName, CachedComparer), Mark(right, leftByName, CachedComparer));
     }
 
-    private static Dictionary<string, CompareState> Mark(IReadOnlyList<TransferEntry> side, Dictionary<string, TransferEntry> other)
+    private static Dictionary<string, CompareState> Mark(
+        IReadOnlyList<TransferEntry> side,
+        Dictionary<string, TransferEntry> other,
+        Func<string, string, bool> folderComparer)
     {
         var result = new Dictionary<string, CompareState>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in side)
-            result[entry.Path] = !other.TryGetValue(entry.Name, out var twin) || twin.IsFolder != entry.IsFolder ? CompareState.OnlyHere
-                : entry.IsFolder || (entry.Size == twin.Size && Math.Abs((entry.ModifiedUtc - twin.ModifiedUtc).TotalSeconds) <= 2) ? CompareState.Same
-                : CompareState.Different;
+        {
+            if (!other.TryGetValue(entry.Name, out var twin) || twin.IsFolder != entry.IsFolder)
+            {
+                result[entry.Path] = CompareState.OnlyHere;
+            }
+            else if (entry.IsFolder)
+            {
+                result[entry.Path] = folderComparer(entry.Path, twin.Path) ? CompareState.Same : CompareState.Different;
+            }
+            else
+            {
+                result[entry.Path] = (entry.Size == twin.Size && Math.Abs((entry.ModifiedUtc - twin.ModifiedUtc).TotalSeconds) <= 2)
+                    ? CompareState.Same
+                    : CompareState.Different;
+            }
+        }
         return result;
+    }
+
+    /// <summary>Compara o conteúdo de duas pastas recursivamente (incluindo todas as subpastas e arquivos).</summary>
+    public static bool AreFolderContentsIdentical(string folderA, string folderB)
+    {
+        if (!Directory.Exists(folderA) && !Directory.Exists(folderB)) return true;
+        if (!Directory.Exists(folderA) || !Directory.Exists(folderB)) return false;
+
+        try
+        {
+            var options = new EnumerationOptions
+            {
+                IgnoreInaccessible = true,
+                AttributesToSkip = FileAttributes.System | FileAttributes.Hidden,
+                RecurseSubdirectories = true
+            };
+
+            var dirA = new DirectoryInfo(folderA);
+            var dirB = new DirectoryInfo(folderB);
+
+            var relDirsA = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var d in dirA.EnumerateDirectories("*", options))
+                relDirsA.Add(Path.GetRelativePath(folderA, d.FullName));
+
+            var relDirsB = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var d in dirB.EnumerateDirectories("*", options))
+                relDirsB.Add(Path.GetRelativePath(folderB, d.FullName));
+
+            if (!relDirsA.SetEquals(relDirsB)) return false;
+
+            var filesA = new Dictionary<string, (long Size, DateTime ModifiedUtc)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var f in dirA.EnumerateFiles("*", options))
+                filesA[Path.GetRelativePath(folderA, f.FullName)] = (f.Length, f.LastWriteTimeUtc);
+
+            var filesB = new Dictionary<string, (long Size, DateTime ModifiedUtc)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var f in dirB.EnumerateFiles("*", options))
+                filesB[Path.GetRelativePath(folderB, f.FullName)] = (f.Length, f.LastWriteTimeUtc);
+
+            if (filesA.Count != filesB.Count) return false;
+
+            foreach (var (relPath, infoA) in filesA)
+            {
+                if (!filesB.TryGetValue(relPath, out var infoB)) return false;
+                if (infoA.Size != infoB.Size) return false;
+                if (Math.Abs((infoA.ModifiedUtc - infoB.ModifiedUtc).TotalSeconds) > 2) return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
 
@@ -182,7 +266,7 @@ public sealed record TransferItemDetails(IReadOnlyList<(string Label, string Val
 
 public sealed record TransferPaneLayout(string? Path, string ViewMode = "Grid", double ThumbnailSize = 132, string SortField = "Name", bool SortDescending = false, bool FoldersFirst = true, bool ShowDetails = false);
 
-public sealed record TransferLayout(TransferPaneLayout Left, TransferPaneLayout Right, double LeftRatio = 0.5, bool ShowPlaces = true, IReadOnlyList<string>? Pinned = null, IReadOnlyList<string>? Recent = null)
+public sealed record TransferLayout(TransferPaneLayout Left, TransferPaneLayout Right, double LeftRatio = 0.5, bool ShowPlaces = true, IReadOnlyList<string>? Pinned = null, IReadOnlyList<string>? Recent = null, bool IsSynchronizedNavigation = false)
 {
     public static TransferLayout Default { get; } = new(new TransferPaneLayout(null), new TransferPaneLayout(null));
 }

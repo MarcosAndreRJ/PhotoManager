@@ -379,3 +379,8 @@ Dica: para não usar seus dados reais, defina `PHOTOMANAGER_ROOT` antes de abrir
 - [ ] Miniaturas de fotos e vídeos aparecem sozinhas; outros arquivos ficam com ícone. Duplo clique em pasta entra; em foto/vídeo abre o visualizador.
 - [ ] Desconectar um disco/pasta: o painel mostra a mensagem e "Atualizar" recupera quando voltar.
 - [ ] Selecionar vários (Ctrl/Shift/Ctrl+A): rodapé mostra "N selecionado(s) · tamanho".
+- [ ] Pastas vazias na grade: pastas sem itens exibem fundo suave (#F1F3F6), borda suave (#D4DCE8), ícone e nome atenuados; pastas com conteúdo mantêm fundo branco e ícone escuro.
+- [ ] Pastas vazias na lista: linha com fundo suave (#F1F3F6) e ícone atenuado.
+- [ ] Seleção de pasta vazia: preserva a borda azul de seleção de 3 px mantendo o fundo distinguível.
+- [ ] Pastas com arquivos ocultos ou de sistema não são tratadas como vazias.
+- [ ] Pastas sem permissão de acesso não são marcadas como vazias (permanecem com estilo padrão).

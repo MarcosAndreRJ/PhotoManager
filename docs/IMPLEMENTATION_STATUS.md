@@ -576,3 +576,27 @@ Relato: "ao selecionar mais de um item e tentar alterar, o botão de salvar não
 - A etiqueta de cor deixou de ser uma moldura grossa: agora é **fundo suave (~12%) + borda discreta (~70%)** no próprio cartão. A **seleção** é um estado separado: borda azul (`PhotoCardSelectedBorder`, 3 px) e o fundo da etiqueta é preservado; sem etiqueta, o fundo selecionado continua azul claro. Hover = realce leve de fundo (sem trocar a borda da etiqueta).
 - Só apresentação: cores centralizadas em `Themes/Colors.xaml` (`PhotoCardDefault*`, `PhotoLabel{Red,Orange,Yellow,Green,Blue,Purple}{Background,Border}`, `PhotoCardSelected*`, `PhotoCardHoverOverlay`) e gatilhos no `PhotoCardContainer` (`Themes/Cards.xaml`; ordem dos gatilhos = prioridade). Persistência, comandos e filtros intactos. A tela Transferência usa o mesmo container (sem etiqueta por enquanto).
 - Imagem de conferência: `docs/Imagens/cards-cores.png`.
+
+### Módulo Transferência — Refinamento visual: destaque de pastas vazias (08/10/2026)
+- **Objetivo**: Identificar visualmente pastas vazias de forma clara, elegante e neutra em poucos segundos na grade ou na lista, sem alterar o layout principal (mantendo o painel esquerdo com Locais/Fixadas/Recentes intacto) e sem degradar a performance.
+- **Regra funcional**: Uma pasta é vazia se não possui itens diretos (arquivos ou subpastas) imediatos. Pastas com qualquer arquivo/subpasta física (inclusive ocultos ou de sistema) são consideradas **não vazias**. Pastas não carregadas, offline, sem permissão ou com erro de acesso nunca são marcadas como vazias.
+- **Detecção leve**: `FolderEmptyChecker.IsEmpty(path)` em `Application/Transfer/FolderListing.cs` usando `Directory.EnumerateFileSystemEntries` com `AttributesToSkip = 0` e `MoveNext()` imediato (O(1) para o primeiro item, liberando handles instantaneamente).
+- **Assíncrono e responsivo**: `TransferPaneViewModel.CheckEmptyFoldersAsync` roda em background task em lote único via `Task.Run` com `CancellationToken`, atualizando `TransferItemViewModel.IsEmptyFolder` e o cache `_emptyFolders` sem bloquear a UI thread. Preservado ao filtrar ou reordenar.
+- **Recursos semânticos** em `Themes/Colors.xaml`:
+  - `TransferEmptyFolderBackgroundBrush` (`#F1F3F6`)
+  - `TransferEmptyFolderBorderBrush` (`#D4DCE8`)
+  - `TransferEmptyFolderPlaceholderBrush` (`#E5EAF1`)
+  - `TransferEmptyFolderForegroundBrush` (`#78869A`)
+  - `TransferEmptyFolderIconBrush` (`#8896A8`)
+  - `TransferEmptyFolderListRowBrush` (`#F1F3F6`)
+  - `TransferEmptyFolderSelectedBackground` (`#E8EDF5`)
+- **Estilos e templates**:
+  - `TransferCardContainer` em `TransferPaneView.xaml`: substitui o container no `GridList` mantendo `PhotoCardContainer` na Biblioteca intacto.
+  - Pasta com conteúdo: fundo padrão (`#FFFFFF`), ícone nítido (`#475569`), título escuro (`#26364A`).
+  - Pasta vazia: fundo cinza suave (`#F1F3F6`), borda suave (`#D4DCE8`), ícone suavizado (`#8896A8`), título suavizado (`#78869A`), `ThumbFrame` transparente unificando o card.
+  - Prioridade visual: 1. Seleção > 2. Drag/Drop > 3. Hover > 4. Marcação de cor > 5. Pasta vazia > 6. Padrão.
+  - MultiDataTrigger: pasta vazia selecionada preserva a borda azul de seleção de 3 px (`PhotoCardSelectedBorder`) mantendo o fundo vazio reconhecível (`#E8EDF5`).
+  - `EditableName`: aplica `TransferEmptyFolderForegroundBrush` no modo grade e modo lista.
+  - `ColoredRow` e `DetailList`: linha com fundo suave (`#F1F3F6`), ícone atenuado (`#8896A8`).
+  - Painel lateral (Locais, Fixadas, Recentes): preservado com `Grid.Column="0"`, garantindo inicialização visível.
+- **Testes**: Cobertura ampliada em `TransferPanesTests` cobrindo pastas vazias, cheias, arquivos ocultos, subpastas ocultas, falhas de permissão, presença da sidebar e notificação de propriedade.

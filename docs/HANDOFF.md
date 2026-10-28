@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-Fases 1–10, rodada de UX e Frente de Coleções Completa (Etapas A, B, C1, C2, D e E) concluídas, compilando e testadas (188 testes verdes em 5 passes consecutivos). A especificação de Coleções está em `docs/prompt_colecoes/` e o plano mestre em `docs/COLLECTIONS_HIERARCHY_PLAN.md`.
+Fases 1–10, rodada de UX, Frente de Coleções Completa (Etapas A, B, C1, C2, D e E) e Módulo Transferência (com refinamento visual de destaque de pastas vazias) concluídos, compilando e testados (testes verdes em passes consecutivos). A especificação de Coleções está em `docs/prompt_colecoes/`, o plano mestre em `docs/COLLECTIONS_HIERARCHY_PLAN.md` e o plano de transferência em `docs/TRANSFER_MODULE_PLAN.md`.
 
 ## Ambiente
 
@@ -76,9 +76,10 @@ Novas: `ApplyFilters()` (em memória), `ToggleFavoriteAsync`, `SelectSidebarComm
 
 ## Próximos passos
 
-1. **Frente Coleções e Subcoleções:** Etapas A (Auditoria e Plano), B ("Todas", "Sem coleção", contadores), C1 (Modelo, Migração e Serviço), C2 (Árvore e CRUD na UI) e D (Drag-and-Drop de Fotos: adicionar, mover com Shift, desambiguação e feedback) concluídas e testadas (171 testes verdes no total).
-2. **Próxima etapa:** Etapa E (Drag-and-Drop de Coleções, reorganização da árvore, prevenção de ciclos no arraste e fechamento) aguarda autorização explícita (`CONTINUE`).
-3. Nenhuma fase ou etapa deve começar sem autorização explícita.
+1. **Frente Coleções e Subcoleções:** Etapas A a E concluídas e testadas.
+2. **Módulo Transferência:** Painéis duplos, navegação, ordenação, filtro, integração com o catálogo e refinamento visual de destaque de pastas vazias concluídos e testados.
+3. **Próximas etapas:** Etapas 3 a 6 do Módulo Transferência (Comparação avançada, transferência em segundo plano, arrastar e soltar entre painéis, sincronização bidirecional completa).
+4. Nenhuma fase ou etapa deve começar sem autorização explícita.
 
 ## Riscos
 

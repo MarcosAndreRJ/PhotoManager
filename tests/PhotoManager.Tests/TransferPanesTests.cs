@@ -326,4 +326,218 @@ public sealed class TransferPanesTests : IDisposable
         Assert.Contains("organizar: novaPasta=True renomear=True cor=True lixeira=True menu=True", report);
         Assert.Contains("extras: data=True detalhes=True fixar=True centro=True locais=True soltar=True", report);
     }
+
+    [Fact]
+    public void FolderEmptyChecker_DetectsEmptyAndNonEmpty_AndHandlesInaccessibleAndOffline()
+    {
+        var empty = Folder("E/vazia");
+        var withFile = Folder("E/com_arquivo");
+        Make("E/com_arquivo/item.jpg");
+        var withSubfolder = Folder("E/com_subpasta");
+        Folder("E/com_subpasta/filho");
+
+        var withHiddenFile = Folder("E/com_arquivo_oculto");
+        var hiddenFilePath = Make("E/com_arquivo_oculto/oculto.dat");
+        File.SetAttributes(hiddenFilePath, File.GetAttributes(hiddenFilePath) | FileAttributes.Hidden);
+
+        var withHiddenFolder = Folder("E/com_subpasta_oculta");
+        var hiddenFolderPath = Folder("E/com_subpasta_oculta/sub_oculta");
+        File.SetAttributes(hiddenFolderPath, File.GetAttributes(hiddenFolderPath) | FileAttributes.Hidden);
+
+        Assert.True(FolderEmptyChecker.IsEmpty(empty));
+        Assert.False(FolderEmptyChecker.IsEmpty(withFile));
+        Assert.False(FolderEmptyChecker.IsEmpty(withSubfolder));
+        Assert.False(FolderEmptyChecker.IsEmpty(withHiddenFile));
+        Assert.False(FolderEmptyChecker.IsEmpty(withHiddenFolder));
+        Assert.False(FolderEmptyChecker.IsEmpty(Path.Combine(_env.Root, "tr", "nao-existe")));
+        Assert.False(FolderEmptyChecker.IsEmpty(""));
+        Assert.False(FolderEmptyChecker.IsEmpty("   "));
+    }
+
+    [Fact]
+    public void TransferViewModel_Sidebar_Locations_Pinned_Recent_AndPanes_Exist()
+    {
+        var view = new TransferViewModel();
+        Assert.True(view.ShowPlaces);
+        Assert.NotEmpty(view.Locations);
+        Assert.NotNull(view.LeftPane);
+        Assert.NotNull(view.RightPane);
+        Assert.NotNull(view.Pinned);
+        Assert.NotNull(view.Recent);
+    }
+
+    [Fact]
+    public async Task Pane_DetectsEmptyFolders_Asynchronously_AndPreservesAcrossFilters()
+    {
+        var root = Folder("P_Empty");
+        Folder("P_Empty/PastaVazia");
+        Folder("P_Empty/PastaCheia");
+        Make("P_Empty/PastaCheia/foto.jpg");
+
+        var pane = new TransferPaneViewModel();
+        await pane.NavigateAsync(root);
+
+        await TestEnvironment.WaitUntilAsync(() =>
+        {
+            var vazia = pane.Items.FirstOrDefault(i => i.Name == "PastaVazia");
+            return vazia is not null && vazia.IsEmptyFolder;
+        });
+
+        var vaziaItem = pane.Items.First(i => i.Name == "PastaVazia");
+        var cheiaItem = pane.Items.First(i => i.Name == "PastaCheia");
+
+        Assert.True(vaziaItem.IsEmptyFolder);
+        Assert.False(cheiaItem.IsEmptyFolder);
+
+        // Ao aplicar filtro de busca e depois limpar, o estado de vazio é preservado
+        pane.SearchText = "Vazia";
+        Assert.Single(pane.Items);
+        Assert.True(pane.Items[0].IsEmptyFolder);
+
+        pane.SearchText = string.Empty;
+        Assert.Equal(2, pane.Items.Count);
+        Assert.True(pane.Items.First(i => i.Name == "PastaVazia").IsEmptyFolder);
+        Assert.False(pane.Items.First(i => i.Name == "PastaCheia").IsEmptyFolder);
+    }
+
+    [Fact]
+    public async Task Pane_EmptyFolderChecker_HandlesErrors_WithoutMarkingEmpty()
+    {
+        var root = Folder("P_Error");
+        Folder("P_Error/PastaComErro");
+
+        // Simula falha de acesso/permissão
+        var pane = new TransferPaneViewModel(folderEmptyChecker: _ => throw new UnauthorizedAccessException("Sem permissão"));
+        await pane.NavigateAsync(root);
+
+        // Espera um ciclo para o background task rodar
+        await Task.Delay(100);
+
+        var item = Assert.Single(pane.Items);
+        Assert.Equal("PastaComErro", item.Name);
+        Assert.False(item.IsEmptyFolder); // Erros de acesso nunca devem ser marcados como vazios!
+    }
+
+    [Fact]
+    public void TransferItemViewModel_IsEmptyFolder_NotifiesPropertyChanged()
+    {
+        var entry = E("PastaTeste", folder: true);
+        var item = new TransferItemViewModel(entry);
+        Assert.False(item.IsEmptyFolder);
+
+        var notified = false;
+        item.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(TransferItemViewModel.IsEmptyFolder)) notified = true;
+        };
+
+        item.IsEmptyFolder = true;
+        Assert.True(item.IsEmptyFolder);
+        Assert.True(notified);
+    }
+
+    [Fact]
+    public async Task SynchronizedNavigation_WhenDisabled_DoesNotSyncNavigation()
+    {
+        var rootA = Folder("SyncDisabled_A");
+        var rootB = Folder("SyncDisabled_B");
+        var subA = Folder("SyncDisabled_A/2026");
+        var subB = Folder("SyncDisabled_B/2026");
+
+        var view = new TransferViewModel(null, rootA, rootB);
+        await TestEnvironment.WaitUntilAsync(() => view.LeftPane.CurrentPath == rootA && view.RightPane.CurrentPath == rootB);
+
+        view.IsSynchronizedNavigation = false;
+
+        await view.LeftPane.NavigateAsync(subA);
+        await TestEnvironment.WaitUntilAsync(() => view.LeftPane.CurrentPath == subA);
+
+        // O painel direito deve permanecer em rootB
+        Assert.Equal(rootB, view.RightPane.CurrentPath);
+    }
+
+    [Fact]
+    public async Task SynchronizedNavigation_WhenEnabled_NavigatesToCorrespondingSubfolder_Bidirectional()
+    {
+        var rootA = Folder("SyncEnabled_A");
+        var rootB = Folder("SyncEnabled_B");
+        var subA = Folder("SyncEnabled_A/Viagem");
+        var subB = Folder("SyncEnabled_B/Viagem");
+
+        var view = new TransferViewModel(null, rootA, rootB);
+        await TestEnvironment.WaitUntilAsync(() => view.LeftPane.CurrentPath == rootA && view.RightPane.CurrentPath == rootB);
+
+        view.IsSynchronizedNavigation = true;
+
+        // Navegar no painel esquerdo deve sincronizar o direito
+        await view.LeftPane.NavigateAsync(subA);
+        await TestEnvironment.WaitUntilAsync(() => view.RightPane.CurrentPath == subB);
+        Assert.Equal(subA, view.LeftPane.CurrentPath);
+        Assert.Equal(subB, view.RightPane.CurrentPath);
+
+        // Navegar de volta para o pai no painel direito deve sincronizar o esquerdo
+        await view.RightPane.NavigateAsync(rootB);
+        await TestEnvironment.WaitUntilAsync(() => view.LeftPane.CurrentPath == rootA);
+        Assert.Equal(rootA, view.LeftPane.CurrentPath);
+        Assert.Equal(rootB, view.RightPane.CurrentPath);
+    }
+
+    [Fact]
+    public async Task SynchronizedNavigation_WhenNavigatingUp_OtherPaneAlsoNavigatesUp()
+    {
+        var rootA = Folder("SyncUp_A");
+        var rootB = Folder("SyncUp_B");
+        var subA = Folder("SyncUp_A/Fotos");
+        var subB = Folder("SyncUp_B/Fotos");
+
+        var view = new TransferViewModel(null, subA, subB);
+        await TestEnvironment.WaitUntilAsync(() => view.LeftPane.CurrentPath == subA && view.RightPane.CurrentPath == subB);
+
+        view.IsSynchronizedNavigation = true;
+
+        view.LeftPane.UpCommand.Execute(null);
+        await TestEnvironment.WaitUntilAsync(() => view.LeftPane.CurrentPath == rootA && view.RightPane.CurrentPath == rootB);
+        Assert.Equal(rootA, view.LeftPane.CurrentPath);
+        Assert.Equal(rootB, view.RightPane.CurrentPath);
+    }
+
+    [Fact]
+    public async Task SynchronizedNavigation_WhenSubfolderDoesNotExistInOther_ShowsMessageWithoutThrowing()
+    {
+        var rootA = Folder("SyncMissing_A");
+        var rootB = Folder("SyncMissing_B");
+        var subA = Folder("SyncMissing_A/ApenasNoEsquerdo");
+
+        var view = new TransferViewModel(null, rootA, rootB);
+        await TestEnvironment.WaitUntilAsync(() => view.LeftPane.CurrentPath == rootA && view.RightPane.CurrentPath == rootB);
+
+        view.IsSynchronizedNavigation = true;
+
+        await view.LeftPane.NavigateAsync(subA);
+        await TestEnvironment.WaitUntilAsync(() => view.LeftPane.CurrentPath == subA);
+
+        // O painel direito não possui essa subpasta, então permanece onde estava
+        Assert.Equal(rootB, view.RightPane.CurrentPath);
+        Assert.Contains("ApenasNoEsquerdo", view.TransferMessage);
+        Assert.Contains("não encontrada", view.TransferMessage);
+    }
+
+    [Fact]
+    public void SynchronizedNavigation_ToggleCommand_AndSettingsPersistence()
+    {
+        var mem = new MemorySettings();
+        var view = new TransferViewModel(settings: mem);
+        Assert.False(view.IsSynchronizedNavigation);
+
+        view.ToggleSynchronizedNavigationCommand.Execute(null);
+        Assert.True(view.IsSynchronizedNavigation);
+
+        view.SaveLayoutNow();
+        Assert.NotNull(mem.Saved);
+        Assert.True(mem.Saved.IsSynchronizedNavigation);
+
+        // Carrega novo ViewModel com os settings salvos
+        var view2 = new TransferViewModel(settings: mem);
+        Assert.True(view2.IsSynchronizedNavigation);
+    }
 }

@@ -45,3 +45,28 @@ public static class FolderLister
     public static TransferEntryKind KindOf(string fileName) =>
         MediaFormats.IsVideo(fileName) ? TransferEntryKind.Video : ImageFormats.IsSupported(fileName) ? TransferEntryKind.Photo : TransferEntryKind.Other;
 }
+
+/// <summary>Verificação rápida se uma pasta está vazia (sem arquivos e sem subpastas imediatas). Retorna falso em caso de erro, offline ou permissão negada.</summary>
+public static class FolderEmptyChecker
+{
+    public static bool IsEmpty(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        try
+        {
+            if (!Directory.Exists(path)) return false;
+            var options = new EnumerationOptions
+            {
+                IgnoreInaccessible = false,
+                AttributesToSkip = 0,
+                RecurseSubdirectories = false
+            };
+            using var enumerator = Directory.EnumerateFileSystemEntries(path, "*", options).GetEnumerator();
+            return !enumerator.MoveNext();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
