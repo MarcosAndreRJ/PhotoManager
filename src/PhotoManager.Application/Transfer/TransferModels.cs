@@ -94,7 +94,7 @@ public sealed class TransferUndoStack(int capacity = 30)
 
 public enum CompareState { None, OnlyHere, Same, Different }
 
-/// <summary>Compara duas listagens pelo NOME: arquivo igual = mesmo tamanho e data (tolerância de 2 s, FAT/exFAT); pasta = compara o conteúdo e subpastas recursivamente. Não sincroniza nada.</summary>
+/// <summary>Compara duas listagens pelo NOME: arquivo igual = mesmo tamanho e data (tolerância de 2 s, FAT/exFAT); pasta = compara o conteúdo até o 1º nível (arquivos diretos e nomes de subpastas imediatas, sem recursão profunda). Não sincroniza nada.</summary>
 public static class FolderComparer
 {
     public static (IReadOnlyDictionary<string, CompareState> Left, IReadOnlyDictionary<string, CompareState> Right) Compare(
@@ -145,7 +145,7 @@ public static class FolderComparer
         return result;
     }
 
-    /// <summary>Compara o conteúdo de duas pastas recursivamente (incluindo todas as subpastas e arquivos).</summary>
+    /// <summary>Compara o conteúdo de duas pastas até o 2º nível (arquivos diretos e nomes de subpastas imediatas, sem recursão profunda).</summary>
     public static bool AreFolderContentsIdentical(string folderA, string folderB)
     {
         if (!Directory.Exists(folderA) && !Directory.Exists(folderB)) return true;
@@ -157,35 +157,35 @@ public static class FolderComparer
             {
                 IgnoreInaccessible = true,
                 AttributesToSkip = FileAttributes.System | FileAttributes.Hidden,
-                RecurseSubdirectories = true
+                RecurseSubdirectories = false
             };
 
             var dirA = new DirectoryInfo(folderA);
             var dirB = new DirectoryInfo(folderB);
 
-            var relDirsA = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var dirsA = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var d in dirA.EnumerateDirectories("*", options))
-                relDirsA.Add(Path.GetRelativePath(folderA, d.FullName));
+                dirsA.Add(d.Name);
 
-            var relDirsB = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var dirsB = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var d in dirB.EnumerateDirectories("*", options))
-                relDirsB.Add(Path.GetRelativePath(folderB, d.FullName));
+                dirsB.Add(d.Name);
 
-            if (!relDirsA.SetEquals(relDirsB)) return false;
+            if (!dirsA.SetEquals(dirsB)) return false;
 
             var filesA = new Dictionary<string, (long Size, DateTime ModifiedUtc)>(StringComparer.OrdinalIgnoreCase);
             foreach (var f in dirA.EnumerateFiles("*", options))
-                filesA[Path.GetRelativePath(folderA, f.FullName)] = (f.Length, f.LastWriteTimeUtc);
+                filesA[f.Name] = (f.Length, f.LastWriteTimeUtc);
 
             var filesB = new Dictionary<string, (long Size, DateTime ModifiedUtc)>(StringComparer.OrdinalIgnoreCase);
             foreach (var f in dirB.EnumerateFiles("*", options))
-                filesB[Path.GetRelativePath(folderB, f.FullName)] = (f.Length, f.LastWriteTimeUtc);
+                filesB[f.Name] = (f.Length, f.LastWriteTimeUtc);
 
             if (filesA.Count != filesB.Count) return false;
 
-            foreach (var (relPath, infoA) in filesA)
+            foreach (var (name, infoA) in filesA)
             {
-                if (!filesB.TryGetValue(relPath, out var infoB)) return false;
+                if (!filesB.TryGetValue(name, out var infoB)) return false;
                 if (infoA.Size != infoB.Size) return false;
                 if (Math.Abs((infoA.ModifiedUtc - infoB.ModifiedUtc).TotalSeconds) > 2) return false;
             }

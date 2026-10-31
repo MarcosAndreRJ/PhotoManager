@@ -2,29 +2,354 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Focusable="True" Background="#0B1220">
-    <Grid>
-        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+    <UserControl.Resources>
+        <!-- Estilo moderno do Slider de Progresso (Seekbar) -->
+        <Style x:Key="VideoSeekSliderStyle" TargetType="Slider">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center">
+                            <!-- Fundo inativo da barra -->
+                            <Border x:Name="TrackBackground" Height="4" CornerRadius="2" Background="#40FFFFFF" VerticalAlignment="Center" />
 
-        <MediaElement x:Name="Media" Grid.Row="0" LoadedBehavior="Manual" UnloadedBehavior="Manual" Stretch="Uniform" ScrubbingEnabled="True"
-                      MediaOpened="Media_MediaOpened" MediaEnded="Media_MediaEnded" MediaFailed="Media_MediaFailed" MouseLeftButtonUp="Media_Click" />
+                            <Track x:Name="PART_Track" VerticalAlignment="Center">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.DecreaseLarge}">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="4" CornerRadius="2" Background="#3B82F6" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.IncreaseLarge}">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb x:Name="Thumb">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Grid Width="16" Height="16">
+                                                    <Ellipse x:Name="ThumbHalo" Fill="#403B82F6" Width="16" Height="16" Opacity="0" />
+                                                    <Ellipse x:Name="ThumbDot" Fill="#FFFFFF" Width="11" Height="11" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Ellipse.Effect>
+                                                            <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.4" />
+                                                        </Ellipse.Effect>
+                                                    </Ellipse>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ThumbHalo" Property="Opacity" Value="1" />
+                                                        <Setter TargetName="ThumbDot" Property="Width" Value="13" />
+                                                        <Setter TargetName="ThumbDot" Property="Height" Value="13" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsDragging" Value="True">
+                                                        <Setter TargetName="ThumbHalo" Property="Opacity" Value="1" />
+                                                        <Setter TargetName="ThumbDot" Property="Fill" Value="#60A5FA" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TrackBackground" Property="Height" Value="6" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <TextBlock x:Name="ErrorText" Grid.Row="0" Visibility="Collapsed" Foreground="#C6D0E0" FontSize="14" TextWrapping="Wrap" TextAlignment="Center"
-                   HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460" />
+        <!-- Estilo moderno do Slider de Volume -->
+        <Style x:Key="VideoVolumeSliderStyle" TargetType="Slider">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center">
+                            <Border Height="3" CornerRadius="1.5" Background="#33FFFFFF" VerticalAlignment="Center" />
+                            <Track x:Name="PART_Track" VerticalAlignment="Center">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.DecreaseLarge}">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="3" CornerRadius="1.5" Background="#60A5FA" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static Slider.IncreaseLarge}">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="Transparent" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Width="10" Height="10" Fill="#FFFFFF">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect BlurRadius="3" ShadowDepth="1" Opacity="0.3" />
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <Border Grid.Row="1" Background="#CC0B1220" Padding="12,8">
-            <DockPanel LastChildFill="True">
-                <Button x:Name="PlayButton" DockPanel.Dock="Left" Style="{StaticResource DarkToolButton}" Click="PlayButton_Click" ToolTip="Reproduzir / pausar (Espaço)" Width="38" Height="34">
-                    <TextBlock x:Name="PlayGlyph" Text="&#xE768;" FontFamily="{StaticResource IconFont}" FontSize="16" />
-                </Button>
-                <Button x:Name="MuteButton" DockPanel.Dock="Right" Style="{StaticResource DarkToolButton}" Click="MuteButton_Click" ToolTip="Sem som" Width="38" Height="34" Margin="6,0,0,0">
-                    <TextBlock x:Name="MuteGlyph" Text="&#xE767;" FontFamily="{StaticResource IconFont}" FontSize="16" />
-                </Button>
-                <Slider x:Name="VolumeSlider" DockPanel.Dock="Right" Width="80" Minimum="0" Maximum="1" Value="0.8" VerticalAlignment="Center" ValueChanged="VolumeSlider_ValueChanged" ToolTip="Volume" />
-                <TextBlock x:Name="DurationText" DockPanel.Dock="Right" Text="0:00" Foreground="#C6D0E0" FontSize="12" VerticalAlignment="Center" Margin="10,0,12,0" />
-                <TextBlock x:Name="PositionText" DockPanel.Dock="Left" Text="0:00" Foreground="#C6D0E0" FontSize="12" VerticalAlignment="Center" Margin="10,0,10,0" />
-                <Slider x:Name="SeekSlider" Minimum="0" Maximum="1" VerticalAlignment="Center" IsMoveToPointEnabled="True" IsEnabled="False"
-                        PreviewMouseLeftButtonDown="Seek_MouseDown" PreviewMouseLeftButtonUp="Seek_MouseUp" ValueChanged="Seek_ValueChanged" ToolTip="Posição" />
-            </DockPanel>
+        <!-- Botão compacto de controle do reprodutor -->
+        <Style x:Key="PlayerButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#E2E8F0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="MinWidth" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#26FFFFFF" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#40FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.3" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid x:Name="RootGrid" ClipToBounds="True" Background="#0B1220"
+          MouseMove="Root_MouseMove" MouseLeave="Root_MouseLeave" MouseWheel="Root_MouseWheel">
+
+        <!-- Superfície de reprodução de vídeo -->
+        <MediaElement x:Name="Media" LoadedBehavior="Manual" UnloadedBehavior="Manual" Stretch="Uniform" ScrubbingEnabled="True"
+                      MediaOpened="Media_MediaOpened" MediaEnded="Media_MediaEnded" MediaFailed="Media_MediaFailed"
+                      MouseLeftButtonDown="Media_MouseLeftButtonDown" />
+
+        <!-- Indicador HUD central flutuante (Play / Pause / Volume / Ação) -->
+        <Border x:Name="HudContainer" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="#E60B1220" BorderBrush="#334155" BorderThickness="1" CornerRadius="12" Padding="20,14"
+                IsHitTestVisible="False">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.5" Color="#000000" />
+            </Border.Effect>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock x:Name="HudIcon" Text="&#xE768;" FontFamily="{StaticResource IconFont}" FontSize="32"
+                           Foreground="#38BDF8" HorizontalAlignment="Center" Margin="0,0,0,6" />
+                <TextBlock x:Name="HudText" Text="Reproduzindo" Foreground="White" FontSize="13" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" TextAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- Cartão inteligente de Erro / Codec Ausente -->
+        <Border x:Name="ErrorCard" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="#F2111A2B" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="12" Padding="28,22"
+                MaxWidth="520" Margin="24">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.6" Color="#000000" />
+            </Border.Effect>
+            <StackPanel HorizontalAlignment="Center">
+                <Border Width="52" Height="52" CornerRadius="26" Background="#26F59E0B" HorizontalAlignment="Center" Margin="0,0,0,12">
+                    <TextBlock Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" FontSize="26" Foreground="#F59E0B" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="Não foi possível reproduzir este vídeo internamente" Foreground="White" FontSize="15" FontWeight="SemiBold" TextAlignment="Center" Margin="0,0,0,6" />
+                <TextBlock x:Name="ErrorDetailsText" Text="O Windows pode não possuir o decodificador nativo para este formato (ex.: vídeos HEVC/H.265 ou contêineres especiais)."
+                           Foreground="#94A3B8" FontSize="12.5" TextWrapping="Wrap" TextAlignment="Center" LineHeight="18" Margin="0,0,0,16" />
+
+                <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,12">
+                    <Button Style="{StaticResource AccentButton}" Click="OpenExternal_Click" Margin="4" Padding="12,7">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8A7;" FontFamily="{StaticResource IconFont}" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Abrir no Reprodutor Padrão" FontWeight="Medium" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource DarkToolButton}" Click="Retry_Click" Margin="4" Padding="12,7">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE72C;" FontFamily="{StaticResource IconFont}" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Tentar Novamente" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource DarkToolButton}" Click="CopyPath_Click" Margin="4" Padding="10,7" ToolTip="Copiar caminho completo do arquivo">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8C8;" FontFamily="{StaticResource IconFont}" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Copiar Caminho" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+
+                <Border Background="#1AFFFFFF" CornerRadius="6" Padding="10,8">
+                    <TextBlock Text="Dica: O vídeo continua intacto no disco. Para suporte direto no Windows, você pode instalar as Extensões de Vídeo HEVC da Microsoft Store ou um pacote de codecs (como K-Lite)."
+                               Foreground="#64748B" FontSize="11" TextWrapping="Wrap" TextAlignment="Center" />
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Barra de Controles Flutuante / Inferior -->
+        <Border x:Name="ControlBar" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                Background="#E60F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="10"
+                Margin="14,0,14,14" MaxWidth="880" Padding="12,8">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.45" Color="#000000" />
+            </Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Linha 0: Seekbar com indicador de marcadores de corte e tooltip de tempo no hover -->
+                <Grid Grid.Row="0" Margin="0,0,0,6">
+                    <!-- Canvas para destaque de trecho marcado (MarkerIn -> MarkerOut) -->
+                    <Canvas x:Name="MarkerCanvas" Height="4" VerticalAlignment="Center" IsHitTestVisible="False" Margin="0">
+                        <Rectangle x:Name="MarkerRangeRect" Height="4" RadiusX="2" RadiusY="2" Fill="#5010B981" Visibility="Collapsed" />
+                        <Border x:Name="MarkerInPin" Width="2" Height="10" Background="#10B981" Visibility="Collapsed" VerticalAlignment="Center" ToolTip="Ponto de entrada (I)" />
+                        <Border x:Name="MarkerOutPin" Width="2" Height="10" Background="#EF4444" Visibility="Collapsed" VerticalAlignment="Center" ToolTip="Ponto de saída (O)" />
+                    </Canvas>
+
+                    <!-- Slider principal de busca -->
+                    <Slider x:Name="SeekSlider" Style="{StaticResource VideoSeekSliderStyle}" Minimum="0" Maximum="1"
+                            VerticalAlignment="Center" IsMoveToPointEnabled="True" IsEnabled="False"
+                            PreviewMouseLeftButtonDown="Seek_MouseDown" PreviewMouseLeftButtonUp="Seek_MouseUp"
+                            ValueChanged="Seek_ValueChanged"
+                            MouseMove="SeekSlider_MouseMove" MouseLeave="SeekSlider_MouseLeave" />
+
+                    <!-- Tooltip flutuante de tempo ao passar o mouse -->
+                    <Border x:Name="HoverBadge" Visibility="Collapsed" Background="#E60F172A" BorderBrush="#38BDF8" BorderThickness="1"
+                            CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0,0,0,18" IsHitTestVisible="False">
+                        <TextBlock x:Name="HoverTimeText" Text="0:00" Foreground="White" FontSize="11" FontWeight="SemiBold" />
+                    </Border>
+                </Grid>
+
+                <!-- Linha 1: Controles de reprodução, tempo, volume e utilitários -->
+                <DockPanel Grid.Row="1" LastChildFill="True">
+
+                    <!-- Lado Esquerdo: Play, Pulos, Quadro a Quadro e Tempo -->
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Play / Pause -->
+                        <Button x:Name="PlayButton" Style="{StaticResource PlayerButton}" Click="PlayButton_Click" ToolTip="Reproduzir / pausar (Espaço)" Width="34" Height="30">
+                            <TextBlock x:Name="PlayGlyph" Text="&#xE768;" FontFamily="{StaticResource IconFont}" FontSize="15" />
+                        </Button>
+
+                        <!-- Pular -5s -->
+                        <Button x:Name="SkipBackButton" Style="{StaticResource PlayerButton}" Click="SkipBack_Click" ToolTip="Recuar 5 segundos (←)" Width="30" Height="30" Margin="2,0,0,0">
+                            <TextBlock Text="-5s" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
+                        </Button>
+
+                        <!-- Pular +5s -->
+                        <Button x:Name="SkipForwardButton" Style="{StaticResource PlayerButton}" Click="SkipForward_Click" ToolTip="Avançar 5 segundos (→)" Width="30" Height="30" Margin="2,0,0,0">
+                            <TextBlock Text="+5s" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" />
+                        </Button>
+
+                        <!-- Recuar 1 quadro -->
+                        <Button x:Name="StepBackButton" Style="{StaticResource PlayerButton}" Click="StepBack_Click" ToolTip="Quadro anterior (,)" Width="28" Height="30" Margin="2,0,0,0">
+                            <TextBlock Text="&#xE892;" FontFamily="{StaticResource IconFont}" FontSize="12" />
+                        </Button>
+
+                        <!-- Avançar 1 quadro -->
+                        <Button x:Name="StepForwardButton" Style="{StaticResource PlayerButton}" Click="StepForward_Click" ToolTip="Próximo quadro (.)" Width="28" Height="30" Margin="2,0,0,0">
+                            <TextBlock Text="&#xE893;" FontFamily="{StaticResource IconFont}" FontSize="12" />
+                        </Button>
+
+                        <!-- Separador vertical -->
+                        <Rectangle Width="1" Height="16" Fill="#334155" Margin="8,0" VerticalAlignment="Center" />
+
+                        <!-- Exibição de Tempo (Posição / Duração ou Restante) -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock x:Name="PositionText" Text="0:00" Foreground="#F1F5F9" FontSize="12" FontWeight="Medium" VerticalAlignment="Center" />
+                            <TextBlock Text=" / " Foreground="#64748B" FontSize="12" VerticalAlignment="Center" />
+                            <TextBlock x:Name="DurationText" Text="0:00" Foreground="#94A3B8" FontSize="12" FontWeight="Medium"
+                                       VerticalAlignment="Center" Cursor="Hand" MouseLeftButtonUp="DurationText_Click"
+                                       ToolTip="Clique para alternar entre tempo total e tempo restante" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Lado Direito: Volume, Velocidade, Loop, Snapshot, Giro, Reprodutor Externo e Tela Cheia -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Volume & Mudo -->
+                        <Button x:Name="MuteButton" Style="{StaticResource PlayerButton}" Click="MuteButton_Click" ToolTip="Sem som (M) · Roda do mouse ajusta o volume" Width="30" Height="30">
+                            <TextBlock x:Name="MuteGlyph" Text="&#xE995;" FontFamily="{StaticResource IconFont}" FontSize="15" />
+                        </Button>
+                        <Slider x:Name="VolumeSlider" Style="{StaticResource VideoVolumeSliderStyle}" Width="65" Minimum="0" Maximum="1" Value="0.8"
+                                VerticalAlignment="Center" ValueChanged="VolumeSlider_ValueChanged" ToolTip="Volume (ou use a roda do mouse sobre o vídeo)" Margin="4,0,8,0" />
+
+                        <!-- Separador vertical -->
+                        <Rectangle x:Name="RightSeparator" Width="1" Height="16" Fill="#334155" Margin="4,0,8,0" VerticalAlignment="Center" />
+
+                        <!-- Velocidade de reprodução -->
+                        <Button x:Name="SpeedButton" Style="{StaticResource PlayerButton}" Click="SpeedButton_Click" ContextMenuOpening="SpeedButton_ContextMenuOpening"
+                                ToolTip="Velocidade (Clique para alternar · Botão direito para opções)" MinWidth="36" Height="30" Margin="2,0">
+                            <TextBlock x:Name="SpeedButtonText" Text="1x" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
+                        </Button>
+
+                        <!-- Modo Loop / Repetição contínua -->
+                        <Button x:Name="LoopButton" Style="{StaticResource PlayerButton}" Click="LoopButton_Click" ToolTip="Repetição contínua (L) · Repete o vídeo ou trecho marcado (I/O)" Width="30" Height="30" Margin="2,0">
+                            <TextBlock x:Name="LoopGlyph" Text="&#xE8EE;" FontFamily="{StaticResource IconFont}" FontSize="13" />
+                        </Button>
+
+                        <!-- Capturar quadro (Snapshot) -->
+                        <Button x:Name="SnapshotButton" Style="{StaticResource PlayerButton}" Click="SnapshotButton_Click" ToolTip="Capturar quadro para Área de Transferência (S)" Width="30" Height="30" Margin="2,0">
+                            <TextBlock Text="&#xE722;" FontFamily="{StaticResource IconFont}" FontSize="13" />
+                        </Button>
+
+                        <!-- Girar 90° -->
+                        <Button x:Name="RotateButton" Style="{StaticResource PlayerButton}" Click="RotateButton_Click" ToolTip="Girar 90° no sentido horário (R)" Width="30" Height="30" Margin="2,0">
+                            <TextBlock Text="&#xE7AD;" FontFamily="{StaticResource IconFont}" FontSize="13" />
+                        </Button>
+
+                        <!-- Abrir no reprodutor padrão do Windows -->
+                        <Button x:Name="ExternalAppButton" Style="{StaticResource PlayerButton}" Click="OpenExternal_Click" ToolTip="Abrir no reprodutor de vídeo padrão do Windows" Width="30" Height="30" Margin="2,0">
+                            <TextBlock Text="&#xE8A7;" FontFamily="{StaticResource IconFont}" FontSize="13" />
+                        </Button>
+
+                        <!-- Alternar Tela Cheia / Maximizar -->
+                        <Button x:Name="FullscreenButton" Style="{StaticResource PlayerButton}" Click="FullscreenButton_Click" ToolTip="Tela cheia (F11 / Duplo clique)" Width="30" Height="30" Margin="2,0">
+                            <TextBlock Text="&#xE740;" FontFamily="{StaticResource IconFont}" FontSize="13" />
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Espaço elástico intermediário -->
+                    <Border />
+                </DockPanel>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

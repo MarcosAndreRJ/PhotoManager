@@ -35,7 +35,7 @@ public sealed class RawSupportTests : IDisposable
     }
 
     [Fact]
-    public async Task ImportingFolderWithCr2_CatalogsThem_WithThumbnailsAndReadOnlyMetadata()
+    public async Task ImportingFolderWithCr2_CatalogsThem_WithThumbnailsAndSupportsSidecarMetadata()
     {
         if (FindRawFolder() is not { } folder) return;
         var library = _env.CreateLibrary();
@@ -46,7 +46,7 @@ public sealed class RawSupportTests : IDisposable
 
         library.SelectedPhoto = library.Photos[0];
         await TestEnvironment.WaitUntilAsync(() => library.PreviewImage is not null);
-        Assert.False(_env.MetadataEditing.CanEdit(library.Photos[0].Photo));
+        Assert.True(_env.MetadataEditing.CanEdit(library.Photos[0].Photo));
     }
 
     [Fact]

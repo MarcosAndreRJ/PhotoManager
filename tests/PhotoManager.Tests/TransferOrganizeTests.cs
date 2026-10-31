@@ -115,6 +115,35 @@ public sealed class TransferOrganizeTests : IDisposable
     }
 
     [Fact]
+    public void AreFolderContentsIdentical_ComparesOnlyFirstLevelWithoutDeepRecursion()
+    {
+        var tempA = Path.Combine(Path.GetTempPath(), "PM_Test_CompareA_" + Guid.NewGuid());
+        var tempB = Path.Combine(Path.GetTempPath(), "PM_Test_CompareB_" + Guid.NewGuid());
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(tempA, "Sub1"));
+            Directory.CreateDirectory(Path.Combine(tempB, "Sub1"));
+            System.IO.File.WriteAllText(Path.Combine(tempA, "file.txt"), "hello");
+            System.IO.File.WriteAllText(Path.Combine(tempB, "file.txt"), "hello");
+
+            // Nivel 2 (dentro de Sub1): diferenca dentro de Sub1 nao deve afetar a comparacao de 1o nivel
+            System.IO.File.WriteAllText(Path.Combine(tempA, "Sub1", "deepA.txt"), "A");
+            System.IO.File.WriteAllText(Path.Combine(tempB, "Sub1", "deepB.txt"), "B");
+
+            Assert.True(FolderComparer.AreFolderContentsIdentical(tempA, tempB));
+
+            // Diferenca direta no 1o nivel (arquivo direto diferente):
+            System.IO.File.WriteAllText(Path.Combine(tempA, "extra.txt"), "x");
+            Assert.False(FolderComparer.AreFolderContentsIdentical(tempA, tempB));
+        }
+        finally
+        {
+            if (Directory.Exists(tempA)) Directory.Delete(tempA, true);
+            if (Directory.Exists(tempB)) Directory.Delete(tempB, true);
+        }
+    }
+
+    [Fact]
     public void DatePlanner_And_BatchRename_AndUndoStack_AndRecents()
     {
         var plan = DateFolderPlanner.Plan([(@"X:\a.jpg", new DateTime(2026, 10, 5)), (@"X:\b.jpg", new DateTime(2026, 10, 20)), (@"X:\c.jpg", new DateTime(2025, 1, 2))], @"D:\Fotos", DateFolderPlanner.Patterns[0]);

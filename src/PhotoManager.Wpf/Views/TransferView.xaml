@@ -42,6 +42,33 @@
         <Style x:Key="CenterButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Width" Value="62" /><Setter Property="Padding" Value="2,6" /><Setter Property="Margin" Value="0,0,0,6" />
         </Style>
+        <Style x:Key="CenterToggleButton" TargetType="ToggleButton">
+            <Setter Property="Width" Value="62" />
+            <Setter Property="Padding" Value="2,6" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Frame" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource HoverBrush}" /></Trigger>
+                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Frame" Property="Opacity" Value="0.75" /></Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Frame" Property="Background" Value="{DynamicResource SoftAccentBrush}" />
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Frame" Property="Opacity" Value="0.4" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="16">
@@ -55,9 +82,6 @@
                           Visibility="{Binding IsComparing, Converter={StaticResource BooleanToVisibilityConverter}}" ToolTip="Esconde o que é igual nos dois lados" />
                 <ToggleButton x:Name="CompareButton" IsChecked="{Binding IsComparing}" Padding="10,5" Margin="0,0,6,0" ToolTip="Marca o que existe só de um lado, o que é igual e o que difere (nome, tamanho e data). Não sincroniza nada.">
                     <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Comparar" /></StackPanel>
-                </ToggleButton>
-                <ToggleButton x:Name="SyncNavButton" IsChecked="{Binding IsSynchronizedNavigation}" Padding="10,5" Margin="0,0,6,0" ToolTip="Navegação Sincronizada: ao entrar numa subpasta ou subir de nível num painel, o outro painel acompanha a mesma navegação automaticamente.">
-                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE895;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Navegação Sincronizada" /></StackPanel>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding ShowPlaces}" Padding="10,5" ToolTip="Mostrar/ocultar a barra de Locais">
                     <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8A0;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Locais" /></StackPanel>
@@ -139,6 +163,11 @@
                 <Button x:Name="UndoButton" Style="{StaticResource CenterButton}" Command="{Binding UndoCommand}" ToolTip="{Binding UndoToolTip}" ToolTipService.ShowOnDisabled="True">
                     <StackPanel><TextBlock Text="&#xE7A7;" FontFamily="{StaticResource IconFont}" HorizontalAlignment="Center" /><TextBlock Text="Desfazer" FontSize="10" HorizontalAlignment="Center" /></StackPanel>
                 </Button>
+                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="6,4,6,10" />
+                <ToggleButton x:Name="SyncNavButton" Style="{StaticResource CenterToggleButton}" IsChecked="{Binding IsSynchronizedNavigation}"
+                              ToolTip="Navegação Sincronizada: ao entrar numa subpasta ou subir de nível num painel, o outro painel acompanha a mesma navegação automaticamente.">
+                    <StackPanel><TextBlock Text="&#xE895;" FontFamily="{StaticResource IconFont}" HorizontalAlignment="Center" /><TextBlock Text="Nav Sinc" FontSize="10" HorizontalAlignment="Center" /></StackPanel>
+                </ToggleButton>
             </StackPanel>
 
             <views:TransferPaneView x:Name="RightPaneView" Grid.Column="3" DataContext="{Binding RightPane}" />

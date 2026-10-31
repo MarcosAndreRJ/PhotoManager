@@ -75,7 +75,7 @@
                 <controls:ZoomViewer x:Name="Viewer" Source="{Binding DisplayImage}" Background="#0B1220">
                     <controls:ZoomViewer.Style><Style TargetType="controls:ZoomViewer"><Style.Triggers><DataTrigger Binding="{Binding IsVideo}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></controls:ZoomViewer.Style>
                 </controls:ZoomViewer>
-                <controls:VideoPlayer x:Name="Player" RotationDegrees="{Binding VideoRotation}" SourcePath="{Binding VideoPath}" Visibility="{Binding IsVideo, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <controls:VideoPlayer x:Name="Player" RotationDegrees="{Binding VideoRotation}" SourcePath="{Binding VideoPath}" MarkerIn="{Binding Library.MarkerIn}" MarkerOut="{Binding Library.MarkerOut}" FullscreenRequested="Player_FullscreenRequested" Visibility="{Binding IsVideo, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <!-- Triagem e trecho em marcação (P/X/U · I/O/M) -->
                 <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14" IsHitTestVisible="False" Visibility="{Binding Library.HasPro, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Border CornerRadius="6" Padding="10,4" Margin="0,0,0,6" Background="#E616A34A" Visibility="{Binding Library.SelectedPhoto.IsPicked, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="✓ Escolhida" Foreground="White" FontWeight="SemiBold" /></Border>

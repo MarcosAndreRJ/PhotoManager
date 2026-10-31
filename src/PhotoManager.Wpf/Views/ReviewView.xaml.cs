@@ -28,10 +28,57 @@ public partial class ReviewView : System.Windows.Controls.UserControl
         if (e.NewValue is true) Dispatcher.BeginInvoke(() => Keyboard.Focus(this), System.Windows.Threading.DispatcherPriority.Input);
     }
 
+    private void Player_FullscreenRequested(object sender, RoutedEventArgs e)
+    {
+        Library?.ToggleFullScreenCommand.Execute(null);
+    }
+
     private void Review_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (Library is not { } library) return;
         if (e.OriginalSource is not System.Windows.Controls.TextBox && Keyboard.Modifiers == ModifierKeys.None && HandleTriageKey(library, e.Key)) { e.Handled = true; return; }
+
+        var isVideo = library.SelectedPhoto is { IsVideo: true };
+
+        // Atalhos específicos para reprodução de vídeo quando o arquivo atual é um vídeo
+        if (isVideo && e.OriginalSource is not System.Windows.Controls.TextBox)
+        {
+            if (Keyboard.Modifiers == ModifierKeys.None)
+            {
+                switch (e.Key)
+                {
+                    case Key.Space: Player.TogglePlay(); e.Handled = true; return;
+                    case Key.Left: Player.SkipSeconds(-5); e.Handled = true; return;
+                    case Key.Right: Player.SkipSeconds(5); e.Handled = true; return;
+                    case Key.Up: Player.AdjustVolume(0.05); e.Handled = true; return;
+                    case Key.Down: Player.AdjustVolume(-0.05); e.Handled = true; return;
+                    case Key.L: Player.ToggleLoop(); e.Handled = true; return;
+                    case Key.S: Player.CaptureSnapshot(); e.Handled = true; return;
+                    case Key.R: Player.Rotate90(); e.Handled = true; return;
+                    case Key.OemComma: Player.StepFrame(-1); e.Handled = true; return;
+                    case Key.OemPeriod: Player.StepFrame(1); e.Handled = true; return;
+                    case Key.Home: Player.Seek(0); e.Handled = true; return;
+                    case Key.End: Player.Seek(Player.DurationSeconds); e.Handled = true; return;
+                    case >= Key.D0 and <= Key.D9:
+                        Player.Seek(Player.DurationSeconds * ((e.Key - Key.D0) / 10.0));
+                        e.Handled = true;
+                        return;
+                    case >= Key.NumPad0 and <= Key.NumPad9:
+                        Player.Seek(Player.DurationSeconds * ((e.Key - Key.NumPad0) / 10.0));
+                        e.Handled = true;
+                        return;
+                }
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Shift)
+            {
+                switch (e.Key)
+                {
+                    case Key.Left: Player.SkipSeconds(-1); e.Handled = true; return;
+                    case Key.Right: Player.SkipSeconds(1); e.Handled = true; return;
+                }
+            }
+        }
+
         var handled = true;
         switch (e.Key)
         {
