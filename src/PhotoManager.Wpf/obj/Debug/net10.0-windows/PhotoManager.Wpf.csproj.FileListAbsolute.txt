@@ -109,3 +109,5 @@ K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Debug\net10.0-windows
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Debug\net10.0-windows\Views\CompareWindow.baml
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Debug\net10.0-windows\Views\ExportDialog.baml
 K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Debug\net10.0-windows\PhotoManager.Wpf.sourcelink.json
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Debug\net10.0-windows\Views\FullCompareDialog.baml
+K:\Trabalho\Projetos\PHOTOMANAGER\src\PhotoManager.Wpf\obj\Debug\net10.0-windows\Views\FullCompareDialog.g.cs

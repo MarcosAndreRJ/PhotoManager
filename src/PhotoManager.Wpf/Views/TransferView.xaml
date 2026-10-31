@@ -83,6 +83,9 @@
                 <ToggleButton x:Name="CompareButton" IsChecked="{Binding IsComparing}" Padding="10,5" Margin="0,0,6,0" ToolTip="Marca o que existe só de um lado, o que é igual e o que difere (nome, tamanho e data). Não sincroniza nada.">
                     <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Comparar" /></StackPanel>
                 </ToggleButton>
+                <Button Command="{Binding FullCompareCommand}" Padding="10,5" Margin="0,0,6,0" ToolTip="Comparação completa até o último nível (F10)">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Comparação completa…" /></StackPanel>
+                </Button>
                 <ToggleButton IsChecked="{Binding ShowPlaces}" Padding="10,5" ToolTip="Mostrar/ocultar a barra de Locais">
                     <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8A0;" FontFamily="{StaticResource IconFont}" VerticalAlignment="Center" Margin="0,0,6,0" /><TextBlock Text="Locais" /></StackPanel>
                 </ToggleButton>

@@ -63,6 +63,7 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
         ClearRecentCommand = new RelayCommand(_ => { Recent.Clear(); ScheduleSave(); }, _ => Recent.Count > 0);
         RefreshLocationsCommand = new RelayCommand(_ => LoadLocations());
         ToggleSynchronizedNavigationCommand = new RelayCommand(_ => IsSynchronizedNavigation = !IsSynchronizedNavigation);
+        FullCompareCommand = new RelayCommand(_ => ActivePane?.FullCompareCommand?.Execute(null), _ => ActivePane?.FullCompareCommand?.CanExecute(null) == true);
         LoadLocations();
 
         var layout = _settings?.Load() ?? TransferLayout.Default;
@@ -100,6 +101,7 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
     public RelayCommand ClearRecentCommand { get; }
     public RelayCommand RefreshLocationsCommand { get; }
     public RelayCommand ToggleSynchronizedNavigationCommand { get; }
+    public RelayCommand FullCompareCommand { get; }
 
     /// <summary>Painel com o foco: os Locais abrem nele.</summary>
     public TransferPaneViewModel ActivePane
@@ -472,7 +474,7 @@ public sealed class TransferViewModel : ViewModelBase, ITransferPaneHost
 
     private void RaiseTransferCommands()
     {
-        foreach (var command in new[] { CopyToRightCommand, MoveToRightCommand, CopyToLeftCommand, MoveToLeftCommand, CancelTransferCommand, UndoCommand, SwapPanesCommand })
+        foreach (var command in new[] { CopyToRightCommand, MoveToRightCommand, CopyToLeftCommand, MoveToLeftCommand, CancelTransferCommand, UndoCommand, SwapPanesCommand, FullCompareCommand })
             command?.RaiseCanExecuteChanged();
         OnPropertyChanged(nameof(CanUndo));
     }

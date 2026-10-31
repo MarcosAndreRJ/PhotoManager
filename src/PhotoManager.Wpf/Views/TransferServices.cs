@@ -13,6 +13,7 @@ public interface ITransferDialogs
     ConflictPolicy? AskConflict(int count, string example, bool move);
     bool BatchRename(BatchRenameViewModel viewModel);
     bool OrganizeByDate(OrganizeByDateViewModel viewModel);
+    bool ShowFullCompare(FullCompareViewModel viewModel);
 }
 
 /// <summary>Área de transferência de ARQUIVOS (a mesma do Explorer): Ctrl+C/Ctrl+X aqui e Ctrl+V lá, e vice-versa.</summary>
@@ -48,6 +49,8 @@ public sealed class WpfTransferDialogs : ITransferDialogs
     public bool BatchRename(BatchRenameViewModel viewModel) => Show(new BatchRenameDialog { DataContext = viewModel });
 
     public bool OrganizeByDate(OrganizeByDateViewModel viewModel) => Show(new OrganizeByDateDialog { DataContext = viewModel });
+
+    public bool ShowFullCompare(FullCompareViewModel viewModel) => Show(new FullCompareDialog { DataContext = viewModel });
 
     private static bool Show(Window dialog)
     {

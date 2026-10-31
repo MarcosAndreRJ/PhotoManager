@@ -174,6 +174,7 @@ public sealed class TransferPaneViewModel : ViewModelBase
         AddToCatalogCommand = new RelayCommand(_ => _ = AddSelectedToCatalogAsync(), _ => CanOrganize && _selected.Any(i => i.IsMedia && !i.IsCataloged));
         ShowInExplorerCommand = new RelayCommand(_ => ShowInExplorer(), _ => HasFolder && !HasError);
         OrganizeByDateCommand = new RelayCommand(_ => _ = OrganizeByDateAsync(), _ => CanOrganize && Host is not null && _entries.Any(e => e.IsMedia));
+        FullCompareCommand = new RelayCommand(_ => _ = FullCompareAsync(), _ => CanFullCompare);
         CopyCommand = new RelayCommand(_ => CopyToClipboard(cut: false), _ => Host is not null && _selected.Count > 0);
         CutCommand = new RelayCommand(_ => CopyToClipboard(cut: true), _ => Host is not null && CanOrganize && _selected.Count > 0);
         PasteCommand = new RelayCommand(_ => _ = PasteAsync(), _ => Host is not null && CanOrganize);
@@ -203,6 +204,7 @@ public sealed class TransferPaneViewModel : ViewModelBase
     public RelayCommand AddToCatalogCommand { get; }
     public RelayCommand ShowInExplorerCommand { get; }
     public RelayCommand OrganizeByDateCommand { get; }
+    public RelayCommand FullCompareCommand { get; }
     public RelayCommand CopyCommand { get; }
     public RelayCommand CutCommand { get; }
     public RelayCommand PasteCommand { get; }
@@ -329,7 +331,7 @@ public sealed class TransferPaneViewModel : ViewModelBase
     private void RaiseOrganizeState()
     {
         OnPropertyChanged(nameof(CanOrganize)); OnPropertyChanged(nameof(CanColor));
-        foreach (var command in new[] { NewFolderCommand, RenameCommand, DeleteCommand, AddToCatalogCommand, ShowInExplorerCommand, OrganizeByDateCommand, CopyCommand, CutCommand, PasteCommand, UndoCommand, ClearFiltersCommand, PinCommand })
+        foreach (var command in new[] { NewFolderCommand, RenameCommand, DeleteCommand, AddToCatalogCommand, ShowInExplorerCommand, OrganizeByDateCommand, FullCompareCommand, CopyCommand, CutCommand, PasteCommand, UndoCommand, ClearFiltersCommand, PinCommand })
             command?.RaiseCanExecuteChanged();
         if (ColorChoices is not null) foreach (var choice in ColorChoices) choice.Command.RaiseCanExecuteChanged();
     }
@@ -808,6 +810,65 @@ public sealed class TransferPaneViewModel : ViewModelBase
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { MessageText = $"Não foi possível ler as datas: {ex.Message}"; return null; }
         finally { IsBusy = false; }
+    }
+
+    public bool CanFullCompare
+    {
+        get
+        {
+            if (Host is null || !HasFolder || HasError) return false;
+            var other = Host.OtherPanePath(this);
+            if (string.IsNullOrWhiteSpace(other) || !Directory.Exists(other)) return false;
+
+            // Se apenas uma pasta estiver selecionada: valida se a pasta com o mesmo nome existe no outro painel ("se existir")
+            if (_selected.Count == 1 && _selected[0].IsFolder)
+            {
+                var otherSub = Path.Combine(other, _selected[0].Name);
+                return Directory.Exists(otherSub);
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>Compara todos os itens da pasta atual (ou subpasta selecionada) com a do outro painel até o último nível.</summary>
+    public async Task FullCompareAsync()
+    {
+        if (Host is null || !HasFolder) return;
+        var other = Host.OtherPanePath(this);
+        if (string.IsNullOrWhiteSpace(other) || !Directory.Exists(other))
+        {
+            MessageText = "O outro painel não possui uma pasta válida aberta.";
+            return;
+        }
+
+        string thisTarget;
+        string otherTarget;
+
+        if (_selected.Count == 1 && _selected[0].IsFolder)
+        {
+            var subName = _selected[0].Name;
+            thisTarget = _selected[0].Path;
+            otherTarget = Path.Combine(other, subName);
+
+            if (!Directory.Exists(otherTarget))
+            {
+                MessageText = $"Subpasta “{subName}” não encontrada no outro painel.";
+                return;
+            }
+        }
+        else
+        {
+            thisTarget = CurrentPath;
+            otherTarget = other;
+        }
+
+        var isLeft = Host is TransferViewModel transferVm ? transferVm.LeftPane == this : true;
+        var leftFolder = isLeft ? thisTarget : otherTarget;
+        var rightFolder = isLeft ? otherTarget : thisTarget;
+
+        var vm = new FullCompareViewModel(leftFolder, rightFolder);
+        _dialogs.ShowFullCompare(vm);
     }
 
     // ---------- área de transferência e arrastar ----------

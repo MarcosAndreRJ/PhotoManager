@@ -133,6 +133,7 @@ public partial class TransferPaneView : UserControl
         else if (e.Key == Key.F5) Pane.RefreshCommand.Execute(null);
         else if (e.Key == Key.Enter && Pane.SelectedItems.Count == 1) Open(Pane.SelectedItems[0]);
         else if (e.Key == Key.F2) Execute(Pane.RenameCommand);
+        else if (e.Key == Key.F10) Execute(Pane.FullCompareCommand);
         else if (e.Key == Key.Delete && modifiers == ModifierKeys.None) Execute(Pane.DeleteCommand);
         else if (e.Key == Key.N && modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) Execute(Pane.NewFolderCommand);
         else if (ctrl && e.Key == Key.C) Execute(Pane.CopyCommand);

@@ -15,11 +15,13 @@ internal sealed class FakeTransferDialogs : ITransferDialogs
     public int ConflictCount { get; private set; }
     public Func<BatchRenameViewModel, bool> OnBatchRename { get; set; } = _ => false;
     public Func<OrganizeByDateViewModel, bool> OnOrganize { get; set; } = _ => false;
+    public Func<FullCompareViewModel, bool> OnShowFullCompare { get; set; } = _ => true;
 
     public bool Confirm(string question) { Questions.Add(question); return ConfirmAnswer; }
     public ConflictPolicy? AskConflict(int count, string example, bool move) { ConflictCount = count; return ConflictAnswer; }
     public bool BatchRename(BatchRenameViewModel viewModel) => OnBatchRename(viewModel);
     public bool OrganizeByDate(OrganizeByDateViewModel viewModel) => OnOrganize(viewModel);
+    public bool ShowFullCompare(FullCompareViewModel viewModel) => OnShowFullCompare(viewModel);
 }
 
 internal sealed class FakeClipboard : IFileClipboard

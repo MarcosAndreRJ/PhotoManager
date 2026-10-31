@@ -59,6 +59,9 @@
             <MenuItem Header="Organizar por data…" Command="{Binding OrganizeByDateCommand}" ToolTip="Cria pastas Ano\Mês (ou outro modelo) e coloca cada foto/vídeo na sua">
                 <MenuItem.Icon><TextBlock Text="&#xE787;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
             </MenuItem>
+            <MenuItem Header="Comparação completa (recursiva)…" Command="{Binding FullCompareCommand}" InputGestureText="F10" ToolTip="Compara todos os arquivos e subpastas desta pasta (ou da pasta selecionada se existir nos dois lados) até o último nível">
+                <MenuItem.Icon><TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
+            </MenuItem>
             <MenuItem Header="Adicionar ao catálogo" Command="{Binding AddToCatalogCommand}" ToolTip="Cataloga as fotos/vídeos selecionados no lugar onde estão (nada é copiado)">
                 <MenuItem.Icon><TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="12" /></MenuItem.Icon>
             </MenuItem>
@@ -278,6 +281,7 @@
                 <Button x:Name="RenameButton" Style="{StaticResource IconButton}" Command="{Binding RenameCommand}" ToolTip="Renomear (F2) — vários arquivos: renomear em lote" Margin="4,0,0,0"><TextBlock Text="&#xE8AC;" FontFamily="{StaticResource IconFont}" /></Button>
                 <Button x:Name="ColorButton" Style="{StaticResource IconButton}" IsEnabled="{Binding CanColor}" ContextMenu="{StaticResource ColorMenu}" Click="ColorButton_Click" ToolTip="Cor da seleção (teclas 1 a 6; 0 remove)" Margin="2,0,0,0"><TextBlock Text="&#xE790;" FontFamily="{StaticResource IconFont}" /></Button>
                 <Button x:Name="OrganizeButton" Style="{StaticResource IconButton}" Command="{Binding OrganizeByDateCommand}" ToolTip="Organizar por data (pastas Ano\Mês…)" Margin="2,0,0,0"><TextBlock Text="&#xE787;" FontFamily="{StaticResource IconFont}" /></Button>
+                <Button x:Name="FullCompareButton" Style="{StaticResource IconButton}" Command="{Binding FullCompareCommand}" ToolTip="Comparação completa até o último nível (F10)" Margin="2,0,0,0"><TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" /></Button>
                 <Button x:Name="DeleteButton" Style="{StaticResource IconButton}" Command="{Binding DeleteCommand}" ToolTip="Enviar a seleção para a Lixeira (Del)" Margin="2,0,0,0"><TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" /></Button>
                 <ToggleButton x:Name="DetailsButton" Padding="8,4" IsChecked="{Binding ShowDetails}" ToolTip="Painel de detalhes (data, câmera, resolução, duração…)" Margin="4,0,0,0"><TextBlock Text="&#xE946;" FontFamily="{StaticResource IconFont}" /></ToggleButton>
                 <Border Width="1" Background="{DynamicResource BorderBrush}" Margin="8,2" />
